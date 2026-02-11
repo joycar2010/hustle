@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时价格监控 - MT5 & Binance</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            position: relative;
+        }
+
+        .spread-display {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .spread-display.left {
+            left: 0;
+            color: #7CFC00;
+            background: rgba(124, 252, 0, 0.1);
+            border: 1px solid rgba(124, 252, 0, 0.3);
+        }
+
+        .spread-display.right {
+            right: 0;
+            color: #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .spread-label {
+            font-size: 0.7em;
+            color: #888;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .spread-value {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f7931a, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+        }
+
+        .status-indicator.connecting {
+            background: #ffaa00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .status-text strong {
+            color: #fff;
+        }
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .price-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .price-card.binance {
+            border-color: rgba(247, 147, 26, 0.3);
+        }
+
+        .price-card.mt5 {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .platform-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .platform-badge.mt5 {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .platform-badge.binance {
+            background: rgba(247, 147, 26, 0.2);
+            color: #f7931a;
+        }
+
+        .symbol {
+            font-size: 1.5em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .price-container {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .price {
+            font-size: 3em;
+            font-weight: bold;
+            color: #fff;
+            transition: color 0.3s ease;
+        }
+
+        .price.up {
+            color: #00ff88;
+        }
+
+        .price.down {
+            color: #ff4444;
+        }
+
+        .price-change {
+            font-size: 1.2em;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .price-change.up {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .price-change.down {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        .price-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .detail-value.bid {
+            color: #00ff88;
+        }
+
+        .detail-value.ask {
+            color: #ff4444;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f7931a, #ffd700);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(247, 147, 26, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .info-message {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .info-message.show {
+            display: block;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #888;
+            font-size: 0.8em;
+            margin-top: 15px;
+        }
+
+        .delay-indicator {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .delay-indicator.ok {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .delay-indicator.warning {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+        }
+
+        .delay-indicator.error {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        @media (max-width: 768px) {
+            .price-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .price {
+                font-size: 2.5em;
+            }
+
+            .price-change {
+                font-size: 1em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .price-details {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .spread-display {
+                position: relative;
+                top: auto;
+                transform: none;
+                margin-bottom: 10px;
+            }
+
+            .spread-display.left {
+                left: auto;
+            }
+
+            .spread-display.right {
+                right: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="spread-display left">
+                <span class="spread-label">XAUUSD.s(Bid) - XAUUSDT(Ask)</span>
+                <span class="spread-value" id="spreadLeft">--</span>
+            </div>
+            <div class="header-content">
+                <h1>实时价格监控</h1>
+            </div>
+            <div class="spread-display right">
+                <span class="spread-label">XAUUSD.s(Ask) - XAUUSDT(Bid)</span>
+                <span class="spread-value" id="spreadRight">--</span>
+            </div>
+            <p>MT5 Gateway & Binance Futures API</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator" id="mt5Status"></div>
+                <span class="status-text">MT5: <strong id="mt5StatusText">未连接</strong></span>
+            </div>
+            <div class="status-item">
+                <span class="status-text">延迟: <strong id="mt5DelayText">--</strong> <span class="delay-indicator" id="mt5DelayIndicator">--</span></span>
+            </div>
+            <div class="status-item">
+                <div class="status-indicator" id="binanceStatus"></div>
+                <span class="status-text">Binance: <strong id="binanceStatusText">未连接</strong></span>
+            </div>
+            <div class="status-item">
+                <span class="status-text">延迟: <strong id="binanceDelayText">--</strong> <span class="delay-indicator" id="binanceDelayIndicator">--</span></span>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="info-message" id="infoMessage"></div>
+
+        <div class="controls">
+            <div class="control-group">
+                <button class="btn btn-success" id="connectMT5Btn" onclick="connectMT5()">连接 MT5</button>
+                <button class="btn btn-danger" id="disconnectMT5Btn" onclick="disconnectMT5()" disabled>断开 MT5</button>
+            </div>
+            <div class="control-group">
+                <button class="btn btn-primary" id="connectBinanceBtn" onclick="connectBinance()">连接 Binance</button>
+                <button class="btn btn-danger" id="disconnectBinanceBtn" onclick="disconnectBinance()" disabled>断开 Binance</button>
+            </div>
+        </div>
+
+        <div class="price-grid">
+            <div class="price-card mt5">
+                <div class="card-header">
+                    <div class="platform-badge mt5">MT5</div>
+                    <div class="platform-badge mt5">Bybit-Live-2</div>
+                </div>
+                <div class="symbol">XAUUSD.s</div>
+                <div class="price-container">
+                    <div class="price" id="mt5CurrentPrice">--</div>
+                    <div class="price-change" id="mt5PriceChange">--</div>
+                </div>
+                <div class="price-details">
+                    <div class="detail-item">
+                        <div class="detail-label">买价 (Bid)</div>
+                        <div class="detail-value bid" id="mt5BidPrice">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">卖价 (Ask)</div>
+                        <div class="detail-value ask" id="mt5AskPrice">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">点差 (Spread)</div>
+                        <div class="detail-value" id="mt5Spread">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">成交量</div>
+                        <div class="detail-value" id="mt5Volume">--</div>
+                    </div>
+                </div>
+                <div class="last-update">
+                    最后更新: <span id="mt5LastUpdateTime">--</span>
+                </div>
+            </div>
+
+            <div class="price-card binance">
+                <div class="card-header">
+                    <div class="platform-badge binance">Binance</div>
+                    <div class="platform-badge binance">Futures</div>
+                </div>
+                <div class="symbol">XAUUSDT</div>
+                <div class="price-container">
+                    <div class="price" id="binanceCurrentPrice">--</div>
+                    <div class="price-change" id="binancePriceChange">--</div>
+                </div>
+                <div class="price-details">
+                    <div class="detail-item">
+                        <div class="detail-label">买价 (Bid)</div>
+                        <div class="detail-value bid" id="binanceBidPrice">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">卖价 (Ask)</div>
+                        <div class="detail-value ask" id="binanceAskPrice">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">24h 涨跌</div>
+                        <div class="detail-value" id="binance24hChange">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">24h 成交量</div>
+                        <div class="detail-value" id="binance24hVolume">--</div>
+                    </div>
+                </div>
+                <div class="last-update">
+                    最后更新: <span id="binanceLastUpdateTime">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let mt5PreviousPrice = null;
+        let binancePreviousPrice = null;
+        let statusCheckInterval = null;
+        let mt5BidPrice = null;
+        let mt5AskPrice = null;
+        let binanceBidPrice = null;
+        let binanceAskPrice = null;
+
+        function initSocket() {
+            socket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+
+            socket.on('mt5_price_update', (data) => {
+                updateMT5Price(data);
+            });
+
+            socket.on('binance_price_update', (data) => {
+                updateBinancePrice(data);
+            });
+
+            socket.on('error', (error) => {
+                showError(error.message || '发生错误');
+            });
+        }
+
+        function updateMT5Price(data) {
+            const currentPrice = data.bid;
+            const priceElement = document.getElementById('mt5CurrentPrice');
+            const changeElement = document.getElementById('mt5PriceChange');
+            const bidElement = document.getElementById('mt5BidPrice');
+            const askElement = document.getElementById('mt5AskPrice');
+            const spreadElement = document.getElementById('mt5Spread');
+            const volumeElement = document.getElementById('mt5Volume');
+            const lastUpdateElement = document.getElementById('mt5LastUpdateTime');
+
+            priceElement.textContent = currentPrice.toFixed(2);
+            bidElement.textContent = data.bid.toFixed(2);
+            askElement.textContent = data.ask.toFixed(2);
+            spreadElement.textContent = data.spread.toFixed(2);
+            volumeElement.textContent = data.volume;
+
+            mt5BidPrice = data.bid;
+            mt5AskPrice = data.ask;
+
+            const updateTime = new Date(data.time);
+            lastUpdateElement.textContent = updateTime.toLocaleString('zh-CN');
+
+            if (mt5PreviousPrice !== null) {
+                const change = currentPrice - mt5PreviousPrice;
+                const changePercent = (change / mt5PreviousPrice) * 100;
+
+                priceElement.className = 'price';
+                changeElement.className = 'price-change';
+
+                if (change > 0) {
+                    priceElement.classList.add('up');
+                    changeElement.classList.add('up');
+                    changeElement.textContent = `+${change.toFixed(2)} (+${changePercent.toFixed(2)}%)`;
+                } else if (change < 0) {
+                    priceElement.classList.add('down');
+                    changeElement.classList.add('down');
+                    changeElement.textContent = `${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
+                } else {
+                    changeElement.textContent = '0.00 (0.00%)';
+                }
+            }
+
+            mt5PreviousPrice = currentPrice;
+            updateConnectionStatus('mt5', 'connected');
+            updateSpread();
+        }
+
+        function updateBinancePrice(data) {
+            const currentPrice = data.price;
+            const priceElement = document.getElementById('binanceCurrentPrice');
+            const changeElement = document.getElementById('binancePriceChange');
+            const bidElement = document.getElementById('binanceBidPrice');
+            const askElement = document.getElementById('binanceAskPrice');
+            const change24hElement = document.getElementById('binance24hChange');
+            const volume24hElement = document.getElementById('binance24hVolume');
+            const lastUpdateElement = document.getElementById('binanceLastUpdateTime');
+
+            priceElement.textContent = currentPrice.toFixed(2);
+            bidElement.textContent = data.bid.toFixed(2);
+            askElement.textContent = data.ask.toFixed(2);
+
+            binanceBidPrice = data.bid;
+            binanceAskPrice = data.ask;
+
+            if (data.price_change_percent !== undefined) {
+                const changePercent = data.price_change_percent;
+                change24hElement.className = 'detail-value';
+                if (changePercent > 0) {
+                    change24hElement.classList.add('bid');
+                    change24hElement.textContent = `+${changePercent.toFixed(2)}%`;
+                } else if (changePercent < 0) {
+                    change24hElement.classList.add('ask');
+                    change24hElement.textContent = `${changePercent.toFixed(2)}%`;
+                } else {
+                    change24hElement.textContent = '0.00%';
+                }
+            }
+
+            if (data.volume_24h !== undefined) {
+                volume24hElement.textContent = data.volume_24h.toFixed(2);
+            }
+
+            const updateTime = new Date(data.time);
+            lastUpdateElement.textContent = updateTime.toLocaleString('zh-CN');
+
+            if (binancePreviousPrice !== null) {
+                const change = currentPrice - binancePreviousPrice;
+                const changePercent = (change / binancePreviousPrice) * 100;
+
+                priceElement.className = 'price';
+                changeElement.className = 'price-change';
+
+                if (change > 0) {
+                    priceElement.classList.add('up');
+                    changeElement.classList.add('up');
+                    changeElement.textContent = `+${change.toFixed(2)} (+${changePercent.toFixed(2)}%)`;
+                } else if (change < 0) {
+                    priceElement.classList.add('down');
+                    changeElement.classList.add('down');
+                    changeElement.textContent = `${change.toFixed(2)} (${changePercent.toFixed(2)}%)`;
+                } else {
+                    changeElement.textContent = '0.00 (0.00%)';
+                }
+            }
+
+            binancePreviousPrice = currentPrice;
+            updateConnectionStatus('binance', 'connected');
+            updateSpread();
+        }
+
+        function updateSpread() {
+            const spreadLeftElement = document.getElementById('spreadLeft');
+            const spreadRightElement = document.getElementById('spreadRight');
+
+            if (mt5BidPrice !== null && binanceAskPrice !== null) {
+                const spreadLeft = mt5BidPrice - binanceAskPrice;
+                spreadLeftElement.textContent = spreadLeft.toFixed(2);
+            } else {
+                spreadLeftElement.textContent = '--';
+            }
+
+            if (mt5AskPrice !== null && binanceBidPrice !== null) {
+                const spreadRight = mt5AskPrice - binanceBidPrice;
+                spreadRightElement.textContent = spreadRight.toFixed(2);
+            } else {
+                spreadRightElement.textContent = '--';
+            }
+        }
+
+        function updateConnectionStatus(platform, status) {
+            const indicator = document.getElementById(`${platform}Status`);
+            const textElement = document.getElementById(`${platform}StatusText`);
+
+            indicator.className = 'status-indicator';
+            if (status === 'connected') {
+                indicator.classList.add('connected');
+                textElement.textContent = '已连接';
+            } else {
+                textElement.textContent = '未连接';
+            }
+        }
+
+        async function connectMT5() {
+            const connectBtn = document.getElementById('connectMT5Btn');
+            const disconnectBtn = document.getElementById('disconnectMT5Btn');
+
+            connectBtn.disabled = true;
+            updateConnectionStatus('mt5', 'connecting');
+
+            try {
+                const response = await fetch('/api/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showInfo('MT5 连接成功');
+                    disconnectBtn.disabled = false;
+                    startStatusCheck();
+                } else {
+                    updateConnectionStatus('mt5', 'disconnected');
+                    connectBtn.disabled = false;
+                    showError(result.message || '连接失败');
+                }
+            } catch (error) {
+                updateConnectionStatus('mt5', 'disconnected');
+                connectBtn.disabled = false;
+                showError('连接请求失败: ' + error.message);
+            }
+        }
+
+        async function disconnectMT5() {
+            const connectBtn = document.getElementById('connectMT5Btn');
+            const disconnectBtn = document.getElementById('disconnectMT5Btn');
+
+            disconnectBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateConnectionStatus('mt5', 'disconnected');
+                    connectBtn.disabled = false;
+                    showInfo('MT5 已断开连接');
+                    document.getElementById('mt5CurrentPrice').textContent = '--';
+                    document.getElementById('mt5BidPrice').textContent = '--';
+                    document.getElementById('mt5AskPrice').textContent = '--';
+                    document.getElementById('mt5Spread').textContent = '--';
+                    document.getElementById('mt5Volume').textContent = '--';
+                    document.getElementById('mt5LastUpdateTime').textContent = '--';
+                    mt5BidPrice = null;
+                    mt5AskPrice = null;
+                    updateSpread();
+                } else {
+                    disconnectBtn.disabled = false;
+                    showError(result.message || '断开失败');
+                }
+            } catch (error) {
+                disconnectBtn.disabled = false;
+                showError('断开请求失败: ' + error.message);
+            }
+        }
+
+        async function connectBinance() {
+            const connectBtn = document.getElementById('connectBinanceBtn');
+            const disconnectBtn = document.getElementById('disconnectBinanceBtn');
+
+            connectBtn.disabled = true;
+            updateConnectionStatus('binance', 'connecting');
+
+            try {
+                const response = await fetch('/api/binance/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showInfo('Binance 连接成功');
+                    disconnectBtn.disabled = false;
+                    startStatusCheck();
+                } else {
+                    updateConnectionStatus('binance', 'disconnected');
+                    connectBtn.disabled = false;
+                    showError(result.message || '连接失败');
+                }
+            } catch (error) {
+                updateConnectionStatus('binance', 'disconnected');
+                connectBtn.disabled = false;
+                showError('连接请求失败: ' + error.message);
+            }
+        }
+
+        async function disconnectBinance() {
+            const connectBtn = document.getElementById('connectBinanceBtn');
+            const disconnectBtn = document.getElementById('disconnectBinanceBtn');
+
+            disconnectBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/binance/disconnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    updateConnectionStatus('binance', 'disconnected');
+                    connectBtn.disabled = false;
+                    showInfo('Binance 已断开连接');
+                    document.getElementById('binanceCurrentPrice').textContent = '--';
+                    document.getElementById('binanceBidPrice').textContent = '--';
+                    document.getElementById('binanceAskPrice').textContent = '--';
+                    document.getElementById('binance24hChange').textContent = '--';
+                    document.getElementById('binance24hVolume').textContent = '--';
+                    document.getElementById('binanceLastUpdateTime').textContent = '--';
+                    binanceBidPrice = null;
+                    binanceAskPrice = null;
+                    updateSpread();
+                } else {
+                    disconnectBtn.disabled = false;
+                    showError(result.message || '断开失败');
+                }
+            } catch (error) {
+                disconnectBtn.disabled = false;
+                showError('断开请求失败: ' + error.message);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const status = await response.json();
+
+                if (status.mt5) {
+                    if (status.mt5.connected) {
+                        updateConnectionStatus('mt5', 'connected');
+                        document.getElementById('connectMT5Btn').disabled = true;
+                        document.getElementById('disconnectMT5Btn').disabled = false;
+
+                        if (status.mt5.delay_seconds !== undefined) {
+                            const delayText = document.getElementById('mt5DelayText');
+                            const delayIndicator = document.getElementById('mt5DelayIndicator');
+
+                            delayText.textContent = status.mt5.delay_seconds.toFixed(1) + 's';
+                            delayIndicator.className = 'delay-indicator';
+
+                            if (status.mt5.delay_ok) {
+                                delayIndicator.classList.add('ok');
+                                delayIndicator.textContent = '正常';
+                            } else {
+                                delayIndicator.classList.add('warning');
+                                delayIndicator.textContent = '延迟';
+                            }
+                        }
+                    } else {
+                        updateConnectionStatus('mt5', 'disconnected');
+                        document.getElementById('connectMT5Btn').disabled = false;
+                        document.getElementById('disconnectMT5Btn').disabled = true;
+                        document.getElementById('mt5DelayText').textContent = '--';
+                        document.getElementById('mt5DelayIndicator').textContent = '--';
+                    }
+                }
+
+                if (status.binance) {
+                    if (status.binance.connected) {
+                        updateConnectionStatus('binance', 'connected');
+                        document.getElementById('connectBinanceBtn').disabled = true;
+                        document.getElementById('disconnectBinanceBtn').disabled = false;
+
+                        if (status.binance.delay_seconds !== undefined) {
+                            const delayText = document.getElementById('binanceDelayText');
+                            const delayIndicator = document.getElementById('binanceDelayIndicator');
+
+                            delayText.textContent = status.binance.delay_seconds.toFixed(1) + 's';
+                            delayIndicator.className = 'delay-indicator';
+
+                            if (status.binance.delay_ok) {
+                                delayIndicator.classList.add('ok');
+                                delayIndicator.textContent = '正常';
+                            } else {
+                                delayIndicator.classList.add('warning');
+                                delayIndicator.textContent = '延迟';
+                            }
+                        }
+                    } else {
+                        updateConnectionStatus('binance', 'disconnected');
+                        document.getElementById('connectBinanceBtn').disabled = false;
+                        document.getElementById('disconnectBinanceBtn').disabled = true;
+                        document.getElementById('binanceDelayText').textContent = '--';
+                        document.getElementById('binanceDelayIndicator').textContent = '--';
+                    }
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        function startStatusCheck() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            statusCheckInterval = setInterval(checkStatus, 2000);
+        }
+
+        function stopStatusCheck() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
+            }
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = '错误: ' + message;
+            errorElement.classList.add('show');
+            setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 5000);
+        }
+
+        function showInfo(message) {
+            const infoElement = document.getElementById('infoMessage');
+            infoElement.textContent = message;
+            infoElement.classList.add('show');
+            setTimeout(hideInfo, 2000);
+        }
+
+        function hideInfo() {
+            document.getElementById('infoMessage').classList.remove('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSocket();
+            checkStatus();
+        });
+    </script>
+</body>
+</html>
