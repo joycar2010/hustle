@@ -28,8 +28,11 @@ risk_manager = RiskManager()
 arbitrage_strategies: Dict[str, ArbitrageStrategy] = {}
 strategy_lock = threading.Lock()
 
+trade_history = []
+trade_history_lock = threading.Lock()
 
-@app.route('/')
+
+@app.route('/test')
 def index():
     return render_template('index.html')
 
@@ -255,7 +258,7 @@ def handle_disconnect():
     logger.info(f"Client disconnected: {request.sid}")
 
 
-@app.route('/arbitrage')
+@app.route('/')
 def arbitrage_page():
     return render_template('arbitrage.html')
 
@@ -624,6 +627,8 @@ def backup_history():
     try:
         import subprocess
         
+        filter_type = request.args.get('filter', 'all')
+        
         # 获取提交历史
         history_result = subprocess.run([
             'git', 'log', '--pretty=format:%H|%an|%s|%at', '-n', '50'
@@ -638,12 +643,22 @@ def backup_history():
             if line:
                 parts = line.split('|', 3)
                 if len(parts) == 4:
-                    history.append({
+                    commit = {
                         "hash": parts[0],
                         "author": parts[1],
                         "message": parts[2],
                         "timestamp": int(parts[3])
-                    })
+                    }
+                    
+                    # 根据筛选条件过滤
+                    if filter_type == 'all':
+                        history.append(commit)
+                    elif filter_type == 'backup':
+                        if '自动备份' in commit['message']:
+                            history.append(commit)
+                    elif filter_type == 'manual':
+                        if '自动备份' not in commit['message']:
+                            history.append(commit)
         
         return jsonify({"success": True, "history": history})
     except Exception as e:
@@ -755,6 +770,51 @@ def disconnect_account(account_id):
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/api/history/limit')
+def get_limit_history():
+    try:
+        with trade_history_lock:
+            history_data = []
+            for trade in trade_history:
+                history_data.append({
+                    "time": int(trade["time"].timestamp()),
+                    "symbol": "XAUUSD",
+                    "price": trade["price"],
+                    "volume": trade["size"],
+                    "type": f"{trade['platform']} {trade['direction']}"
+                })
+        
+        return jsonify({"success": True, "data": history_data})
+    except Exception as e:
+        logger.error(f"Error getting limit history: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/history/positions')
+def get_positions_history():
+    try:
+        positions = []
+        
+        with gateway_lock:
+            if gateway and gateway.connected:
+                positions_data = gateway.get_positions()
+                if positions_data:
+                    for pos in positions_data:
+                        positions.append({
+                            "ticket": pos.get('ticket', 0),
+                            "symbol": pos.get('symbol', ''),
+                            "type": '买入' if pos.get('type') == 0 else '卖出',
+                            "volume": pos.get('volume', 0),
+                            "price": pos.get('price_open', 0),
+                            "profit": pos.get('profit', 0)
+                        })
+        
+        return jsonify({"success": True, "data": positions})
+    except Exception as e:
+        logger.error(f"Error getting positions history: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
 @app.route('/api/risk/status')
 def get_risk_status():
     risk_summary = risk_manager.get_risk_summary()
@@ -803,6 +863,18 @@ def execute_order(account_id: str, direction: str, price: float, size: float, or
 def on_trade(platform: str, trade_data: Dict):
     for strategy_id, strategy in arbitrage_strategies.items():
         strategy.on_trade(platform, trade_data)
+    
+    with trade_history_lock:
+        trade_history.append({
+            "time": datetime.now(),
+            "platform": platform,
+            "direction": trade_data.get('direction', ''),
+            "price": trade_data.get('price', 0),
+            "size": trade_data.get('size', 0)
+        })
+        
+        if len(trade_history) > 100:
+            trade_history.pop(0)
     
     socketio.emit('trade_update', {
         "platform": platform,
