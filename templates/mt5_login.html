@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT5 登录器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f7931a, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header p {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #f7931a;
+            box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #666;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f7931a, #ffd700);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00ff88;
+        }
+
+        .status-dot.connecting {
+            background: #ffaa00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .status-text strong {
+            color: #fff;
+        }
+
+        .account-info {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .account-info.show {
+            display: block;
+        }
+
+        .account-info h3 {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            color: #fff;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .message {
+            display: none;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+        }
+
+        .message.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>MT5 登录器</h1>
+            <p>Bybit TradFi MT5 Gateway</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="login">MT5 账号</label>
+                <input type="text" id="login" name="login" value="5229471" placeholder="输入 MT5 账号" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">主密码</label>
+                <input type="password" id="password" name="password" value="Lk106504!" placeholder="输入主密码" required>
+            </div>
+
+            <div class="form-group">
+                <label for="server">服务器</label>
+                <input type="text" id="server" name="server" value="Bybit-Live-2" placeholder="输入服务器地址" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="loginBtn">
+                <span class="btn-text" id="loginBtnText">登录</span>
+            </button>
+        </form>
+
+        <button type="button" class="btn btn-danger" id="logoutBtn" onclick="handleLogout()" disabled>
+            <span class="btn-text">退出登录</span>
+        </button>
+
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="status-text">状态: <strong id="statusText">未连接</strong></span>
+        </div>
+
+        <div class="account-info" id="accountInfo">
+            <h3>账户信息</h3>
+            <div class="info-row">
+                <span class="info-label">账号</span>
+                <span class="info-value" id="accountLogin">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">服务器</span>
+                <span class="info-value" id="accountServer">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">公司名称</span>
+                <span class="info-value" id="accountCompany">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">货币</span>
+                <span class="info-value" id="accountCurrency">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">余额</span>
+                <span class="info-value" id="accountBalance">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">净值</span>
+                <span class="info-value" id="accountEquity">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">保证金</span>
+                <span class="info-value" id="accountMargin">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">可用保证金</span>
+                <span class="info-value" id="accountFreeMargin">--</span>
+            </div>
+        </div>
+
+        <div class="message error" id="errorMessage"></div>
+        <div class="message success" id="successMessage"></div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isLoggedIn = false;
+
+        function initSocket() {
+            socket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                checkLoginStatus();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+
+            socket.on('mt5_login_status', (data) => {
+                updateLoginStatus(data);
+            });
+
+            socket.on('error', (error) => {
+                showError(error.message || '发生错误');
+            });
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            const server = document.getElementById('server').value;
+
+            loginBtn.disabled = true;
+            loginBtnText.innerHTML = '<span class="loading"></span> 登录中...';
+
+            try {
+                const response = await fetch('/api/mt5/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        login: parseInt(login),
+                        password: password,
+                        server: server
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('登录成功');
+                    updateStatus('connecting');
+                } else {
+                    showError(result.message || '登录失败');
+                    loginBtn.disabled = false;
+                    loginBtnText.textContent = '登录';
+                }
+            } catch (error) {
+                showError('登录请求失败: ' + error.message);
+                loginBtn.disabled = false;
+                loginBtnText.textContent = '登录';
+            }
+        }
+
+        async function handleLogout() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const logoutBtnText = logoutBtn.querySelector('.btn-text');
+
+            logoutBtn.disabled = true;
+            logoutBtnText.innerHTML = '<span class="loading"></span> 退出中...';
+
+            try {
+                const response = await fetch('/api/mt5/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('已退出登录');
+                    resetLoginForm();
+                } else {
+                    showError(result.message || '退出失败');
+                    logoutBtn.disabled = false;
+                    logoutBtnText.textContent = '退出登录';
+                }
+            } catch (error) {
+                showError('退出请求失败: ' + error.message);
+                logoutBtn.disabled = false;
+                logoutBtnText.textContent = '退出登录';
+            }
+        }
+
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/mt5/status');
+                const result = await response.json();
+
+                if (result.success && result.connected) {
+                    updateLoginStatus(result);
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        function updateLoginStatus(data) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const accountInfo = document.getElementById('accountInfo');
+
+            if (data.connected) {
+                isLoggedIn = true;
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = '已连接';
+                loginBtn.disabled = true;
+                logoutBtn.disabled = false;
+
+                if (data.account_info) {
+                    accountInfo.classList.add('show');
+                    document.getElementById('accountLogin').textContent = data.account_info.login;
+                    document.getElementById('accountServer').textContent = data.account_info.server;
+                    document.getElementById('accountCompany').textContent = data.account_info.company || '--';
+                    document.getElementById('accountCurrency').textContent = data.account_info.currency || '--';
+                    document.getElementById('accountBalance').textContent = data.account_info.balance ? data.account_info.balance.toFixed(2) : '--';
+                    document.getElementById('accountEquity').textContent = data.account_info.equity ? data.account_info.equity.toFixed(2) : '--';
+                    document.getElementById('accountMargin').textContent = data.account_info.margin ? data.account_info.margin.toFixed(2) : '--';
+                    document.getElementById('accountFreeMargin').textContent = data.account_info.free_margin ? data.account_info.free_margin.toFixed(2) : '--';
+                }
+            } else {
+                isLoggedIn = false;
+                statusDot.className = 'status-dot';
+                statusText.textContent = '未连接';
+                loginBtn.disabled = false;
+                logoutBtn.disabled = true;
+                accountInfo.classList.remove('show');
+            }
+        }
+
+        function updateStatus(status) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            if (status === 'connecting') {
+                statusDot.className = 'status-dot connecting';
+                statusText.textContent = '连接中...';
+            }
+        }
+
+        function resetLoginForm() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const accountInfo = document.getElementById('accountInfo');
+
+            isLoggedIn = false;
+            statusDot.className = 'status-dot';
+            statusText.textContent = '未连接';
+            loginBtn.disabled = false;
+            loginBtnText.textContent = '登录';
+            logoutBtn.disabled = true;
+            accountInfo.classList.remove('show');
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = '错误: ' + message;
+            errorElement.classList.add('show');
+            setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.classList.add('show');
+            setTimeout(() => {
+                successElement.classList.remove('show');
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSocket();
+        });
+    </script>
+</body>
+</html>

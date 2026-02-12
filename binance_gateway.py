@@ -34,7 +34,7 @@ class BinanceGateway:
         ).hexdigest()
         return signature
 
-    def _make_request(self, endpoint: str, params: dict = None, signed: bool = False) -> Optional[dict]:
+    def _make_request(self, endpoint: str, params: dict = None, signed: bool = False, method: str = "GET") -> Optional[dict]:
         try:
             url = f"{self.base_url}{endpoint}"
             headers = {
@@ -49,7 +49,11 @@ class BinanceGateway:
                 params['timestamp'] = int(time.time() * 1000)
                 params['signature'] = self._generate_signature(params)
 
-            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if method.upper() == "POST":
+                response = requests.post(url, headers=headers, json=params, timeout=10)
+            else:
+                response = requests.get(url, headers=headers, params=params, timeout=10)
+            
             response.raise_for_status()
             return response.json()
 
@@ -210,6 +214,40 @@ class BinanceGateway:
             status["error"] = "Not connected"
         
         return status
+
+    def send_order(self, direction: str, price: float, size: float, order_id: str = None) -> str:
+        if not self.connected:
+            logger.error("Not connected to Binance")
+            return None
+
+        endpoint = "/fapi/v1/order"
+        params = {
+            "symbol": self.symbol,
+            "side": "BUY" if direction.lower() == "buy" else "SELL",
+            "type": "LIMIT",
+            "quantity": size,
+            "price": price,
+            "timeInForce": "GTC",
+            "timestamp": int(time.time() * 1000)
+        }
+
+        if order_id:
+            params["clientOrderId"] = order_id
+
+        params["signature"] = self._generate_signature(params)
+
+        result = self._make_request(endpoint, params, signed=True, method="POST")
+        
+        if result is None:
+            logger.error("Failed to send order")
+            return None
+
+        if "orderId" in result:
+            logger.info(f"Order sent successfully: {result['orderId']}")
+            return str(result["orderId"])
+        else:
+            logger.error(f"Order failed: {result}")
+            return None
 
     def remove_callback(self, callback):
         if callback in self.callbacks:

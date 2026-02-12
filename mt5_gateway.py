@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class MT5Gateway:
-    def __init__(self, login: int, password: str, server: str, symbols: list):
+    def __init__(self, login: str, password: str, server: str, symbols: list):
         self.login = login
         self.password = password
         self.server = server
@@ -28,7 +28,7 @@ class MT5Gateway:
                 logger.error(f"MT5 initialize failed: {mt5.last_error()}")
                 return False
 
-            if not mt5.login(self.login, self.password, self.server):
+            if not mt5.login(int(self.login), self.password, self.server):
                 logger.error(f"MT5 login failed: {mt5.last_error()}")
                 mt5.shutdown()
                 return False
@@ -113,3 +113,66 @@ class MT5Gateway:
             "last_update": self.last_update_time.isoformat() if self.last_update_time else None,
             "running": self.running,
         }
+
+    def get_account_info(self) -> Optional[Dict[str, Any]]:
+        if not self.connected:
+            return None
+
+        account_info = mt5.account_info()
+        if account_info is None:
+            logger.error(f"Failed to get account info: {mt5.last_error()}")
+            return None
+
+        return {
+            "login": account_info.login,
+            "server": account_info.server,
+            "company": account_info.company,
+            "currency": account_info.currency,
+            "balance": account_info.balance,
+            "equity": account_info.equity,
+            "margin": account_info.margin,
+            "free_margin": account_info.margin_free,
+            "margin_level": account_info.margin_level,
+            "profit": account_info.profit,
+        }
+
+    def send_order(self, direction: str, price: float, size: float, order_id: str = None) -> str:
+        if not self.connected:
+            logger.error("Not connected to MT5")
+            return None
+
+        symbol = self.symbols[0] if self.symbols else "XAUUSD.s"
+        
+        symbol_info = mt5.symbol_info(symbol)
+        if symbol_info is None:
+            logger.error(f"Failed to get symbol info for {symbol}")
+            return None
+
+        request_dict = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": symbol,
+            "volume": size,
+            "type": mt5.ORDER_TYPE_BUY if direction.lower() == "buy" else mt5.ORDER_TYPE_SELL,
+            "price": price,
+            "deviation": 20,
+            "magic": 123456,
+            "comment": "Arbitrage trade",
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+
+        if order_id:
+            request_dict["comment"] = f"Arbitrage trade {order_id}"
+
+        result = mt5.order_send(request_dict)
+        
+        if result is None:
+            logger.error(f"Failed to send order: {mt5.last_error()}")
+            return None
+
+        if result.retcode != mt5.TRADE_RETCODE_DONE:
+            logger.error(f"Order failed: {result.retcode} - {result.comment}")
+            return None
+
+        logger.info(f"Order sent successfully: {result.order}")
+        return str(result.order)
