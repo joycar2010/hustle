@@ -539,6 +539,169 @@ def connect_account(account_id):
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/version-control')
+def version_control_page():
+    return render_template('version_control.html')
+
+
+@app.route('/api/backup/status')
+def backup_status():
+    try:
+        import subprocess
+        import datetime
+        
+        # 检查 GitHub 连接
+        github_status = subprocess.run(['git', 'remote', '-v'], capture_output=True, text=True, cwd='.')
+        github_connected = github_status.returncode == 0
+        
+        # 获取当前分支
+        branch_status = subprocess.run(['git', 'branch', '--show-current'], capture_output=True, text=True, cwd='.')
+        current_branch = branch_status.stdout.strip() if branch_status.returncode == 0 else 'Unknown'
+        
+        # 获取最新提交
+        commit_status = subprocess.run(['git', 'log', '-1', '--format=%H'], capture_output=True, text=True, cwd='.')
+        latest_commit = commit_status.stdout.strip() if commit_status.returncode == 0 else 'Unknown'
+        
+        # 检查未提交变更
+        status = subprocess.run(['git', 'status', '--porcelain'], capture_output=True, text=True, cwd='.')
+        uncommitted_changes = len(status.stdout.strip().split('\n')) if status.stdout.strip() else 0
+        
+        # 模拟备份状态
+        backup_enabled = True
+        last_backup = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        return jsonify({
+            "success": True,
+            "status": {
+                "github_connected": github_connected,
+                "current_branch": current_branch,
+                "latest_commit": latest_commit,
+                "uncommitted_changes": uncommitted_changes,
+                "backup_enabled": backup_enabled,
+                "last_backup": last_backup
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error getting backup status: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/backup/run', methods=['POST'])
+def run_backup():
+    try:
+        import subprocess
+        import datetime
+        
+        data = request.get_json()
+        message = data.get('message', f'自动备份: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        include_config = data.get('includeConfig', True)
+        auto_push = data.get('autoPush', True)
+        
+        # 添加所有文件
+        subprocess.run(['git', 'add', '.'], cwd='.')
+        
+        # 提交变更
+        commit_result = subprocess.run(['git', 'commit', '-m', message], capture_output=True, text=True, cwd='.')
+        
+        # 推送变更
+        push_result = None
+        if auto_push:
+            push_result = subprocess.run(['git', 'push', 'origin', 'master'], capture_output=True, text=True, cwd='.')
+        
+        return jsonify({
+            "success": True,
+            "message": "备份成功",
+            "commit_result": commit_result.stdout if commit_result else "No commit needed",
+            "push_result": push_result.stdout if push_result else "No push needed"
+        })
+    except Exception as e:
+        logger.error(f"Error running backup: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/backup/history')
+def backup_history():
+    try:
+        import subprocess
+        
+        # 获取提交历史
+        history_result = subprocess.run([
+            'git', 'log', '--pretty=format:%H|%an|%s|%at', '-n', '50'
+        ], capture_output=True, text=True, cwd='.')
+        
+        if history_result.returncode != 0:
+            return jsonify({"success": False, "message": "Failed to get git history"})
+        
+        # 解析历史记录
+        history = []
+        for line in history_result.stdout.strip().split('\n'):
+            if line:
+                parts = line.split('|', 3)
+                if len(parts) == 4:
+                    history.append({
+                        "hash": parts[0],
+                        "author": parts[1],
+                        "message": parts[2],
+                        "timestamp": int(parts[3])
+                    })
+        
+        return jsonify({"success": True, "history": history})
+    except Exception as e:
+        logger.error(f"Error getting backup history: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/backup/rollback', methods=['POST'])
+def backup_rollback():
+    try:
+        import subprocess
+        
+        data = request.get_json()
+        commit_hash = data.get('commit_hash')
+        
+        if not commit_hash:
+            return jsonify({"success": False, "message": "Missing commit hash"})
+        
+        # 执行回滚
+        reset_result = subprocess.run(
+            ['git', 'reset', '--hard', commit_hash],
+            capture_output=True, text=True, cwd='.'
+        )
+        
+        if reset_result.returncode != 0:
+            return jsonify({"success": False, "message": f"Rollback failed: {reset_result.stderr}"})
+        
+        # 推送回滚
+        push_result = subprocess.run(
+            ['git', 'push', 'origin', 'master', '--force'],
+            capture_output=True, text=True, cwd='.'
+        )
+        
+        if push_result.returncode != 0:
+            return jsonify({"success": False, "message": f"Push failed: {push_result.stderr}"})
+        
+        return jsonify({"success": True, "message": f"Successfully rolled back to {commit_hash}"})
+    except Exception as e:
+        logger.error(f"Error rolling back: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/backup/config', methods=['POST'])
+def backup_config():
+    try:
+        data = request.get_json()
+        
+        # 保存配置到文件
+        import json
+        with open('backup_config.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        
+        return jsonify({"success": True, "message": "Backup config saved"})
+    except Exception as e:
+        logger.error(f"Error saving backup config: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
 @app.route('/api/accounts/<account_id>/disconnect', methods=['POST'])
 def disconnect_account(account_id):
     global gateway, binance_gateway

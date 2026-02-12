@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本管理 - GitHub 定时备份</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #f7931a, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .status-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .status-label {
+            color: #aaa;
+        }
+
+        .status-value {
+            font-weight: 600;
+        }
+
+        .status-value.connected {
+            color: #00ff88;
+        }
+
+        .status-value.disconnected {
+            color: #ff4444;
+        }
+
+        .status-value.warning {
+            color: #ffaa00;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f7931a, #ffd700);
+            color: #1a1a2e;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #1a1a2e;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: #fff;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .version-history {
+            margin-bottom: 40px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-header h2 {
+            font-size: 1.5em;
+            color: #ffd700;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .version-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .version-table th,
+        .version-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .version-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: #888;
+            font-weight: 600;
+        }
+
+        .version-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .commit-message {
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .rollback-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+        }
+
+        .rollback-btn:hover {
+            background: rgba(255, 170, 0, 0.3);
+        }
+
+        .rollback-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .backup-config {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-group label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .config-group input,
+        .config-group select {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .config-group input:focus,
+        .config-group select:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .schedule-section {
+            margin-top: 20px;
+        }
+
+        .schedule-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .schedule-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message {
+            display: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .message.success {
+            display: block;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+        }
+
+        .message.error {
+            display: block;
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .filter-section {
+                width: 100%;
+            }
+
+            .version-table {
+                font-size: 0.9em;
+            }
+
+            .version-table th,
+            .version-table td {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+            }
+
+            .schedule-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>版本管理 - GitHub 定时备份</h1>
+            <p>跨平台套利对冲系统版本控制中心</p>
+        </div>
+
+        <div class="message success" id="successMessage"></div>
+        <div class="message error" id="errorMessage"></div>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-header">系统状态</div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">GitHub 连接状态</span>
+                        <span class="status-value" id="githubStatus">检查中...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">当前分支</span>
+                        <span class="status-value" id="currentBranch">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">最新提交</span>
+                        <span class="status-value" id="latestCommit">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">未提交变更</span>
+                        <span class="status-value" id="uncommittedChanges">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">定时备份</span>
+                        <span class="status-value" id="backupStatus">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">上次备份</span>
+                        <span class="status-value" id="lastBackup">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">快速操作</div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="manualBackup()">立即备份</button>
+                    <button class="btn btn-success" onclick="checkStatus()">检查状态</button>
+                    <button class="btn btn-danger" onclick="showRollbackConfirm()">版本回滚</button>
+                    <button class="btn" onclick="refreshHistory()">刷新历史</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="backup-config">
+            <div class="card-header">定时备份配置</div>
+            <div class="config-grid">
+                <div class="config-group">
+                    <label>备份频率</label>
+                    <select id="backupFrequency">
+                        <option value="hourly">每小时</option>
+                        <option value="daily">每天</option>
+                        <option value="weekly">每周</option>
+                        <option value="manual">手动</option>
+                    </select>
+                </div>
+                <div class="config-group">
+                    <label>备份时间</label>
+                    <input type="time" id="backupTime" value="00:00">
+                </div>
+                <div class="config-group">
+                    <label>分支名称</label>
+                    <input type="text" id="branchName" value="master">
+                </div>
+                <div class="config-group">
+                    <label>提交信息模板</label>
+                    <input type="text" id="commitTemplate" value="自动备份: {datetime}">
+                </div>
+            </div>
+            <div class="schedule-section">
+                <label>备份选项</label>
+                <div class="schedule-options">
+                    <div class="schedule-option">
+                        <input type="checkbox" id="includeConfig" checked>
+                        <label for="includeConfig">包含配置文件</label>
+                    </div>
+                    <div class="schedule-option">
+                        <input type="checkbox" id="autoPush" checked>
+                        <label for="autoPush">自动推送</label>
+                    </div>
+                    <div class="schedule-option">
+                        <input type="checkbox" id="sendNotification" checked>
+                        <label for="sendNotification">发送通知</label>
+                    </div>
+                </div>
+            </div>
+            <div class="actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="saveBackupConfig()">保存配置</button>
+                <button class="btn" onclick="resetConfig()">重置为默认</button>
+            </div>
+        </div>
+
+        <div class="version-history">
+            <div class="history-header">
+                <h2>版本历史</h2>
+                <div class="filter-section">
+                    <select id="historyFilter">
+                        <option value="all">全部</option>
+                        <option value="backup">自动备份</option>
+                        <option value="manual">手动提交</option>
+                    </select>
+                    <button class="btn" onclick="filterHistory()">筛选</button>
+                </div>
+            </div>
+            <table class="version-table">
+                <thead>
+                    <tr>
+                        <th>提交时间</th>
+                        <th>提交信息</th>
+                        <th>提交人</th>
+                        <th>提交哈希</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #888;">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let backupConfig = {
+            frequency: 'daily',
+            time: '00:00',
+            branch: 'master',
+            commitTemplate: '自动备份: {datetime}',
+            includeConfig: true,
+            autoPush: true,
+            sendNotification: true
+        };
+
+        function initSocket() {
+            socket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                checkStatus();
+                loadVersionHistory();
+                loadBackupConfig();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+            });
+
+            socket.on('backup_status', (data) => {
+                updateBackupStatus(data);
+            });
+
+            socket.on('error', (error) => {
+                showError(error.message || '发生错误');
+            });
+        }
+
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.classList.add('show');
+            setTimeout(() => {
+                successElement.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+            setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 5000);
+        }
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/backup/status');
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('githubStatus').textContent = result.status.github_connected ? '已连接' : '未连接';
+                    document.getElementById('githubStatus').className = 'status-value ' + (result.status.github_connected ? 'connected' : 'disconnected');
+                    document.getElementById('currentBranch').textContent = result.status.current_branch;
+                    document.getElementById('latestCommit').textContent = result.status.latest_commit;
+                    document.getElementById('uncommittedChanges').textContent = result.status.uncommitted_changes;
+                    document.getElementById('backupStatus').textContent = result.status.backup_enabled ? '已启用' : '已禁用';
+                    document.getElementById('lastBackup').textContent = result.status.last_backup;
+                }
+            } catch (error) {
+                showError('检查状态失败: ' + error.message);
+            }
+        }
+
+        async function manualBackup() {
+            showSuccess('开始手动备份...');
+
+            try {
+                const response = await fetch('/api/backup/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: '手动备份: ' + new Date().toLocaleString(),
+                        includeConfig: true,
+                        autoPush: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('备份成功: ' + result.message);
+                    checkStatus();
+                    loadVersionHistory();
+                } else {
+                    showError('备份失败: ' + result.message);
+                }
+            } catch (error) {
+                showError('备份请求失败: ' + error.message);
+            }
+        }
+
+        async function loadVersionHistory() {
+            try {
+                const response = await fetch('/api/backup/history');
+                const result = await response.json();
+
+                if (result.success) {
+                    updateHistoryTable(result.history);
+                }
+            } catch (error) {
+                showError('加载历史失败: ' + error.message);
+            }
+        }
+
+        function updateHistoryTable(history) {
+            const tbody = document.getElementById('historyTableBody');
+
+            if (history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无历史记录</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = history.map(commit => `
+                <tr>
+                    <td>${new Date(commit.timestamp * 1000).toLocaleString()}</td>
+                    <td class="commit-message">${commit.message}</td>
+                    <td>${commit.author}</td>
+                    <td>${commit.hash.substring(0, 7)}</td>
+                    <td>
+                        <button class="rollback-btn" onclick="rollbackToVersion('${commit.hash}')">回滚</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function refreshHistory() {
+            loadVersionHistory();
+            showSuccess('历史记录已刷新');
+        }
+
+        function filterHistory() {
+            const filter = document.getElementById('historyFilter').value;
+            loadVersionHistory();
+            showSuccess('已应用筛选: ' + {
+                'all': '全部',
+                'backup': '自动备份',
+                'manual': '手动提交'
+            }[filter]);
+        }
+
+        function showRollbackConfirm() {
+            const commitHash = prompt('请输入要回滚的提交哈希:');
+            if (commitHash) {
+                rollbackToVersion(commitHash);
+            }
+        }
+
+        async function rollbackToVersion(commitHash) {
+            if (!confirm(`确定要回滚到版本 ${commitHash.substring(0, 7)} 吗？这将覆盖当前的所有更改。`)) {
+                return;
+            }
+
+            showSuccess('开始版本回滚...');
+
+            try {
+                const response = await fetch('/api/backup/rollback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        commit_hash: commitHash
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('回滚成功: ' + result.message);
+                    checkStatus();
+                    loadVersionHistory();
+                } else {
+                    showError('回滚失败: ' + result.message);
+                }
+            } catch (error) {
+                showError('回滚请求失败: ' + error.message);
+            }
+        }
+
+        function loadBackupConfig() {
+            document.getElementById('backupFrequency').value = backupConfig.frequency;
+            document.getElementById('backupTime').value = backupConfig.time;
+            document.getElementById('branchName').value = backupConfig.branch;
+            document.getElementById('commitTemplate').value = backupConfig.commitTemplate;
+            document.getElementById('includeConfig').checked = backupConfig.includeConfig;
+            document.getElementById('autoPush').checked = backupConfig.autoPush;
+            document.getElementById('sendNotification').checked = backupConfig.sendNotification;
+        }
+
+        async function saveBackupConfig() {
+            backupConfig = {
+                frequency: document.getElementById('backupFrequency').value,
+                time: document.getElementById('backupTime').value,
+                branch: document.getElementById('branchName').value,
+                commitTemplate: document.getElementById('commitTemplate').value,
+                includeConfig: document.getElementById('includeConfig').checked,
+                autoPush: document.getElementById('autoPush').checked,
+                sendNotification: document.getElementById('sendNotification').checked
+            };
+
+            showSuccess('保存配置...');
+
+            try {
+                const response = await fetch('/api/backup/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(backupConfig)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('配置保存成功');
+                } else {
+                    showError('配置保存失败: ' + result.message);
+                }
+            } catch (error) {
+                showError('保存请求失败: ' + error.message);
+            }
+        }
+
+        function resetConfig() {
+            document.getElementById('backupFrequency').value = 'daily';
+            document.getElementById('backupTime').value = '00:00';
+            document.getElementById('branchName').value = 'master';
+            document.getElementById('commitTemplate').value = '自动备份: {datetime}';
+            document.getElementById('includeConfig').checked = true;
+            document.getElementById('autoPush').checked = true;
+            document.getElementById('sendNotification').checked = true;
+            showSuccess('配置已重置为默认值');
+        }
+
+        function updateBackupStatus(data) {
+            if (data.running) {
+                showSuccess('备份任务正在执行...');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSocket();
+        });
+    </script>
+</body>
+</html>
