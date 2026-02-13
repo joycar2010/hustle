@@ -34,6 +34,40 @@
             overflow-y: auto;
         }
 
+        .sidebar .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .total-profit-section {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-profit-label {
+            font-size: 0.9em;
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .total-profit-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .total-profit-value.negative {
+            color: #ff4444;
+        }
+
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -354,6 +388,102 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .heartbeat-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .heartbeat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .heartbeat-label {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .heartbeat-value {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #00ccff;
+        }
+
+        .heartbeat-value.connected {
+            color: #00ff88;
+        }
+
+        .heartbeat-value.disconnected {
+            color: #ff4444;
+        }
+
+        .heartbeat-line {
+            height: 2px;
+            background: linear-gradient(90deg, #00ff88 0%, #00ccff 100%);
+            border-radius: 1px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heartbeat-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: heartbeat-pulse 2s infinite;
+        }
+
+        @keyframes heartbeat-pulse {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        .heartbeat-line.inactive {
+            background: rgba(255, 68, 68, 0.3);
+        }
+
+        .heartbeat-line.inactive::after {
+            animation: none;
+        }
+
+        .heartbeat-line.alert {
+            background: linear-gradient(90deg, #ff4444 0%, #ff6b6b 100%);
+            animation: heartbeat-alert 1s infinite;
+        }
+
+        @keyframes heartbeat-alert {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .heartbeat-value.disconnected {
+            animation: text-alert 1s infinite;
+        }
+
+        @keyframes text-alert {
+            0%, 100% {
+                color: #ff4444;
+            }
+            50% {
+                color: #ff6b6b;
+            }
+        }
+
         .orderbook-row {
             display: flex;
             justify-content: space-between;
@@ -543,6 +673,11 @@
             color: #fff;
         }
 
+        .btn-warning {
+            background: linear-gradient(135deg, #ffaa00, #ff8c00);
+            color: #1a1a2e;
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -653,8 +788,14 @@
             border-radius: 12px;
             padding: 30px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
         }
 
         .modal-header {
@@ -668,6 +809,79 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .algorithm-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .algorithm-section:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(0, 204, 255, 0.2);
+        }
+
+        .algorithm-section h4 {
+            color: #00ccff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .algorithm-section h4::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+
+        .algorithm-section.collapsed h4::after {
+            transform: rotate(-90deg);
+        }
+
+        .algorithm-content {
+            font-size: 0.9em;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .algorithm-section.collapsed .algorithm-content {
+            display: none;
+        }
+
+        .algorithm-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .algorithm-content li {
+            margin-bottom: 5px;
+            color: #ccc;
         }
 
         .modal-footer {
@@ -783,6 +997,129 @@
             color: #ffd700;
         }
 
+        .history-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .history-tab {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-tab.active {
+            background: rgba(0, 204, 255, 0.2);
+            color: #00ccff;
+            border-color: rgba(0, 204, 255, 0.3);
+        }
+
+        .history-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .history-content {
+            margin-top: 15px;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .order-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+        }
+
+        .order-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .order-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .history-filter-section {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-item label {
+            font-size: 0.85em;
+            color: #888;
+        }
+
+        .filter-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .stat-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #00ccff;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .filter-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 1200px) {
             body {
                 grid-template-columns: 1fr;
@@ -837,12 +1174,44 @@
 </head>
 <body>
     <div class="sidebar">
-        <div class="panel-header">账户管理</div>
+        <div class="panel-header">
+            <span>账户管理</span>
+            <div class="toggle-switch">
+                <span class="toggle-label">单腿预警</span>
+                <div class="toggle-button" id="singleLegAlert" onclick="toggleSingleLegAlert()"></div>
+            </div>
+        </div>
+        <div class="total-profit-section">
+            <span class="total-profit-label">总盈利</span>
+            <span class="total-profit-value" id="totalProfit">0.00</span>
+        </div>
         <div class="account-list" id="accountList">
         </div>
         <div style="margin-top: 20px;">
             <button class="btn btn-primary" onclick="showAddAccountModal()" style="width: 100%;">添加账户</button>
+            <button class="btn" onclick="showStrategyControlModal()" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, rgba(255, 99, 71, 0.3), rgba(255, 140, 0, 0.3)); color: #ff6347; border: 1px solid rgba(255, 99, 71, 0.4); font-weight: 600;">策略控制</button>
+            <button class="btn" onclick="showHistoryDataModal()" style="width: 100%; margin-top: 10px; background: rgba(0, 204, 255, 0.2); color: #00ccff;">历史数据</button>
             <button class="btn" onclick="window.location.href='/version-control'" style="width: 100%; margin-top: 10px; background: rgba(255, 215, 0, 0.2); color: #ffd700;">版本管理</button>
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <div class="panel-header" style="font-size: 1em; margin-bottom: 15px;">风控状态</div>
+            <div id="riskStatus">
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #888;">总违规次数: </span>
+                    <span style="color: #fff; font-weight: 600;" id="totalViolations">0</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #888;">活跃规则: </span>
+                    <span style="color: #00ff88;" id="activeRules">0</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <span style="color: #888;">风控状态: </span>
+                    <span style="color: #00ff88;" id="riskEnabled">启用</span>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="resetRiskCounters()" style="width: 100%;">重置计数器</button>
+            </div>
         </div>
     </div>
 
@@ -853,8 +1222,6 @@
                 <div>
                     <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)" disabled>▲</button>
                     <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
-                    <span class="status-badge" id="connectionStatus">未连接</span>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
                 </div>
             </div>
             <div class="panel-content">
@@ -874,6 +1241,17 @@
                             <span class="orderbook-vol" id="bybitBidVol">--</span>
                         </div>
                     </div>
+                    <div class="heartbeat-section">
+                        <div class="heartbeat-row">
+                            <span class="heartbeat-label">连接状态</span>
+                            <span class="heartbeat-value disconnected" id="bybitHeartbeat">未连接</span>
+                        </div>
+                        <div class="heartbeat-row">
+                            <span class="heartbeat-label">最后更新</span>
+                            <span class="heartbeat-value" id="bybitLastUpdate">--</span>
+                        </div>
+                        <div class="heartbeat-line inactive" id="bybitHeartbeatLine"></div>
+                    </div>
                 </div>
                 <div class="price-card binance">
                     <div class="price-label">Binance - XAUUSDT</div>
@@ -890,16 +1268,27 @@
                             <span class="orderbook-vol" id="binanceBidVol">--</span>
                         </div>
                     </div>
+                    <div class="heartbeat-section">
+                        <div class="heartbeat-row">
+                            <span class="heartbeat-label">连接状态</span>
+                            <span class="heartbeat-value disconnected" id="binanceHeartbeat">未连接</span>
+                        </div>
+                        <div class="heartbeat-row">
+                            <span class="heartbeat-label">最后更新</span>
+                            <span class="heartbeat-value" id="binanceLastUpdate">--</span>
+                        </div>
+                        <div class="heartbeat-line inactive" id="binanceHeartbeatLine"></div>
+                    </div>
                 </div>
             </div>
             <div class="spread-display">
                 <div class="spread-item">
-                    <div class="price-label">正向价差</div>
-                    <div class="spread-value positive" id="spreadPositive">--</div>
+                    <div class="price-label">做多Bybit</div>
+                    <div class="spread-value negative" id="spreadNegative">--</div>
                 </div>
                 <div class="spread-item">
-                    <div class="price-label">负向价差</div>
-                    <div class="spread-value negative" id="spreadNegative">--</div>
+                    <div class="price-label">做多Binance</div>
+                    <div class="spread-value positive" id="spreadPositive">--</div>
                 </div>
             </div>
             <div class="chart-container">
@@ -908,65 +1297,67 @@
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">
-                <span>策略控制</span>
-                <div>
-                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
-                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
-                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
-                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
-                </div>
-            </div>
-            <div class="panel-content">
-            <div class="mode-toggle">
-                <span class="toggle-label">交易模式</span>
-                <div class="toggle-button" id="modeSwitch" onclick="toggleMode()"></div>
-                <span class="toggle-label" id="modeLabel">自动</span>
-            </div>
-            <div class="strategy-controls">
-                <div class="control-group">
-                    <label>开仓阈值</label>
-                    <input type="number" id="openThreshold" value="0.5" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>平仓阈值</label>
-                    <input type="number" id="closeThreshold" value="0.3" step="0.1">
-                </div>
-                <div class="control-group">
-                    <label>订单大小</label>
-                    <input type="number" id="orderSize" value="0.01" step="0.01">
-                </div>
-                <div class="control-group">
-                    <label>最大追单次数</label>
-                    <input type="number" id="maxChaseCount" value="5" step="1">
-                </div>
-            </div>
-            <div class="trade-buttons">
-                <button class="btn btn-success" id="startStrategyBtn" onclick="startStrategy()">启动策略</button>
-                <button class="btn btn-danger" id="stopStrategyBtn" onclick="stopStrategy()" disabled>停止策略</button>
-                <button class="btn btn-primary" onclick="updateParameters()">更新参数</button>
-            </div>
-            </div>
-        </div>
+
 
         <div class="panel">
             <div class="panel-header">
-                <span>阶梯挂单策略</span>
                 <div>
                     <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
                     <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
                     <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
                     <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <div class="toggle-switch">
-                        <span class="toggle-label">单腿预警</span>
-                        <div class="toggle-button" id="singleLegAlert" onclick="toggleSingleLegAlert()"></div>
-                    </div>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
                 </div>
+                <div style="display: flex; align-items: center; gap: 20px; flex: 1; margin: 0 20px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">点差</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="realTimeSpread" style="font-size: 1em; font-weight: 600; color: #ff4444;">--</span>
+                            <span id="spreadRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">Binance</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="realTimeBinance" style="font-size: 1em; font-weight: 600; color: #00ff88;">0.00</span>
+                            <span id="binanceRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">Bybit</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="realTimeBybit" style="font-size: 1em; font-weight: 600; color: #00ff88;">0.00</span>
+                            <span id="bybitRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                </div>
+                <span>反向套利（做多Bybit）</span>
             </div>
             <div class="panel-content">
+            <div style="margin-bottom: 15px; padding: 20px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">M币设置一次下单数量</label>
+                        <input type="number" id="mCoinOrderSize" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <button class="btn btn-success" id="mCoinOpenBtn" onclick="toggleMcoinOpen()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">启用开仓</button>
+                        <button class="btn btn-danger" id="mCoinCloseBtn" onclick="toggleMcoinClose()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">启用平仓</button>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">开仓数据同步</label>
+                        <input type="number" id="openSyncInput" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">平仓数据同步</label>
+                        <input type="number" id="closeSyncInput" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-primary" onclick="saveSyncSettings()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">保存</button>
+                    </div>
+                </div>
+            </div>
             <div id="gridStrategyContainer">
                 <div class="grid-strategy-layer" data-layer="1">
                     <div class="layer-header">
@@ -981,20 +1372,16 @@
                     </div>
                     <div class="layer-params">
                         <div class="control-group">
-                            <label>价差触发</label>
+                            <label>开仓价</label>
+                            <input type="number" class="grid-open-price" value="0" step="0.01">
+                        </div>
+                        <div class="control-group">
+                            <label>阈值</label>
                             <input type="number" class="grid-spread" value="0.5" step="0.1">
                         </div>
                         <div class="control-group">
-                            <label>下单数量</label>
-                            <input type="number" class="grid-size" value="0.01" step="0.01">
-                        </div>
-                        <div class="control-group">
-                            <label>开仓方向</label>
-                            <select class="grid-direction">
-                                <option value="both">双向</option>
-                                <option value="long">只做多</option>
-                                <option value="short">只做空</option>
-                            </select>
+                            <label>下单数量限制</label>
+                            <input type="number" class="grid-size-limit" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
                         </div>
                     </div>
                 </div>
@@ -1011,20 +1398,16 @@
                     </div>
                     <div class="layer-params">
                         <div class="control-group">
-                            <label>价差触发</label>
+                            <label>开仓价</label>
+                            <input type="number" class="grid-open-price" value="0" step="0.01">
+                        </div>
+                        <div class="control-group">
+                            <label>阈值</label>
                             <input type="number" class="grid-spread" value="1.0" step="0.1">
                         </div>
                         <div class="control-group">
-                            <label>下单数量</label>
-                            <input type="number" class="grid-size" value="0.02" step="0.01">
-                        </div>
-                        <div class="control-group">
-                            <label>开仓方向</label>
-                            <select class="grid-direction">
-                                <option value="both">双向</option>
-                                <option value="long">只做多</option>
-                                <option value="short">只做空</option>
-                            </select>
+                            <label>下单数量限制</label>
+                            <input type="number" class="grid-size-limit" value="2" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
                         </div>
                     </div>
                 </div>
@@ -1038,32 +1421,222 @@
 
         <div class="panel">
             <div class="panel-header">
-                <span>交易执行</span>
                 <div>
                     <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
                     <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
                     <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
                     <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px; flex: 1; margin: 0 20px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">点差</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="forwardRealTimeSpread" style="font-size: 1em; font-weight: 600; color: #7CFC00;">--</span>
+                            <span id="forwardSpreadRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">Binance</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="forwardRealTimeBinance" style="font-size: 1em; font-weight: 600; color: #00ff88;">0.00</span>
+                            <span id="forwardBinanceRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; min-width: 100px;">
+                        <span style="font-size: 0.8em; color: #888; margin-bottom: 4px;">Bybit</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span id="forwardRealTimeBybit" style="font-size: 1em; font-weight: 600; color: #00ff88;">0.00</span>
+                            <span id="forwardBybitRefreshStatus" style="font-size: 0.7em; color: #888;">●</span>
+                        </div>
+                    </div>
+                </div>
+                <span>正向套利（做多Binance）</span>
+            </div>
+            <div class="panel-content">
+            <div style="margin-bottom: 15px; padding: 20px; background: rgba(255, 255, 255, 0.02); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">M币设置一次下单数量</label>
+                        <input type="number" id="forwardMCoinOrderSize" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <button class="btn btn-success" id="forwardMCoinOpenBtn" onclick="toggleForwardMcoinOpen()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">启用开仓</button>
+                        <button class="btn btn-danger" id="forwardMCoinCloseBtn" onclick="toggleForwardMcoinClose()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">启用平仓</button>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">开仓数据同步</label>
+                        <input type="number" id="forwardOpenSyncInput" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #ffd700;">平仓数据同步</label>
+                        <input type="number" id="forwardCloseSyncInput" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)" style="width: 100%; padding: 12px; font-size: 1em; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; background: rgba(255, 255, 255, 0.05); color: #fff;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="btn btn-primary" onclick="saveForwardSyncSettings()" style="padding: 12px 30px; font-size: 1em; font-weight: 600; transition: all 0.3s ease; white-space: nowrap; min-width: 120px; height: 46px;">保存</button>
+                    </div>
+                </div>
+            </div>
+            <div id="forwardGridStrategyContainer">
+                <div class="grid-strategy-layer" data-layer="1">
+                    <div class="layer-header">
+                        <span class="layer-title">阶梯 1</span>
+                        <div class="layer-actions">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="layer-enable" checked>
+                                <span>启用</span>
+                            </label>
+                            <button class="btn-small delete" onclick="removeForwardGridLayer(1)">删除</button>
+                        </div>
+                    </div>
+                    <div class="layer-params">
+                        <div class="control-group">
+                            <label>开仓价</label>
+                            <input type="number" class="grid-open-price" value="0" step="0.01">
+                        </div>
+                        <div class="control-group">
+                            <label>阈值</label>
+                            <input type="number" class="grid-spread" value="0.5" step="0.1">
+                        </div>
+                        <div class="control-group">
+                            <label>下单数量限制</label>
+                            <input type="number" class="grid-size-limit" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-strategy-layer" data-layer="2">
+                    <div class="layer-header">
+                        <span class="layer-title">阶梯 2</span>
+                        <div class="layer-actions">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="layer-enable" checked>
+                                <span>启用</span>
+                            </label>
+                            <button class="btn-small delete" onclick="removeForwardGridLayer(2)">删除</button>
+                        </div>
+                    </div>
+                    <div class="layer-params">
+                        <div class="control-group">
+                            <label>开仓价</label>
+                            <input type="number" class="grid-open-price" value="0" step="0.01">
+                        </div>
+                        <div class="control-group">
+                            <label>阈值</label>
+                            <input type="number" class="grid-spread" value="1.0" step="0.1">
+                        </div>
+                        <div class="control-group">
+                            <label>下单数量限制</label>
+                            <input type="number" class="grid-size-limit" value="2" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="trade-buttons" style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="addForwardGridLayer()">+ 添加阶梯</button>
+                <button class="btn btn-success" onclick="saveForwardGridStrategy()">保存策略</button>
+            </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span>数据提醒</span>
+                <div>
+                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
+                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
+                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
+                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div style="margin-bottom: 20px;">
+                    <div class="panel-header" style="font-size: 1em; margin-bottom: 15px;">挂单记录</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #00ff88;">正向套利</div>
+                            <div id="forwardOrderList" style="max-height: 200px; overflow-y: auto;">
+                                <div style="font-size: 0.9em; color: #888; text-align: center; margin: 20px 0;">暂无挂单</div>
+                            </div>
+                        </div>
+                        <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #ff4444;">反向套利</div>
+                            <div id="reverseOrderList" style="max-height: 200px; overflow-y: auto;">
+                                <div style="font-size: 0.9em; color: #888; text-align: center; margin: 20px 0;">暂无挂单</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div class="panel-header" style="font-size: 1em; margin-bottom: 15px;">保证金率监控</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #ffd700;">Binance</div>
+                            <div style="margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #888;">保证金率</span>
+                                    <span id="binanceMarginRate" style="font-weight: 600; color: #00ff88;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #888;">风险率</span>
+                                    <span id="binanceRiskRate" style="font-weight: 600; color: #00ff88;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #888;">账户权益</span>
+                                    <span id="binanceEquity" style="font-weight: 600;">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div style="font-weight: 600; margin-bottom: 10px; color: #00ccff;">Bybit</div>
+                            <div style="margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #888;">保证金率</span>
+                                    <span id="bybitMarginRate" style="font-weight: 600; color: #00ff88;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                    <span style="color: #888;">风险率</span>
+                                    <span id="bybitRiskRate" style="font-weight: 600; color: #00ff88;">--</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: #888;">账户权益</span>
+                                    <span id="bybitEquity" style="font-weight: 600;">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <span>紧急处理</span>
+                <div>
+                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
+                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
+                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
+                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
                 </div>
             </div>
             <div class="panel-content">
             <div class="strategy-controls">
                 <div class="control-group">
                     <label>账户</label>
-                    <select id="manualAccountSelect">
+                    <select id="manualAccountSelect" onchange="updateManualPrice(); updateManualSize();">
                         <option value="">选择账户</option>
                     </select>
                 </div>
                 <div class="control-group">
                     <label>方向</label>
-                    <select id="manualDirection">
+                    <select id="manualDirection" onchange="updateManualPrice()">
                         <option value="buy">买入</option>
                         <option value="sell">卖出</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>价格</label>
+                    <label>买入价</label>
                     <input type="number" id="manualPrice" step="0.01" oninput="calculateMargin()">
                 </div>
                 <div class="control-group">
@@ -1104,125 +1677,9 @@
             </div>
         </div>
 
-        <div class="panel">
-            <div class="panel-header">
-                <span>风控状态</span>
-                <div>
-                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
-                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
-                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
-                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
-                </div>
-            </div>
-            <div class="panel-content">
-            <div id="riskStatus">
-                <div style="margin-bottom: 10px;">
-                    <span style="color: #888;">总违规次数: </span>
-                    <span style="color: #fff; font-weight: 600;" id="totalViolations">0</span>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <span style="color: #888;">活跃规则: </span>
-                    <span style="color: #00ff88;" id="activeRules">0</span>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <span style="color: #888;">风控状态: </span>
-                    <span style="color: #00ff88;" id="riskEnabled">启用</span>
-                </div>
-            </div>
-            <div style="margin-top: 15px;">
-                <button class="btn btn-primary" onclick="resetRiskCounters()">重置计数器</button>
-            </div>
-            </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">
-                <span>历史数据查询</span>
-                <div>
-                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
-                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
-                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)">▼</button>
-                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
-                </div>
-            </div>
-            <div class="panel-content">
-            <div class="history-tabs">
-                <button class="history-tab active" onclick="switchHistoryTab('limit')">限价历史</button>
-                <button class="history-tab" onclick="switchHistoryTab('positions')">MT5持仓列表</button>
-            </div>
-            <div id="limitHistoryContent" class="history-content">
-                <table class="order-table">
-                    <thead>
-                        <tr>
-                            <th>时间</th>
-                            <th>交易对</th>
-                            <th>价格</th>
-                            <th>数量</th>
-                            <th>类型</th>
-                        </tr>
-                    </thead>
-                    <tbody id="limitHistoryBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #888;">暂无限价历史记录</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="positionsHistoryContent" class="history-content" style="display: none;">
-                <table class="order-table">
-                    <thead>
-                        <tr>
-                            <th>订单号</th>
-                            <th>交易对</th>
-                            <th>方向</th>
-                            <th>持仓量</th>
-                            <th>开仓价</th>
-                            <th>盈亏</th>
-                        </tr>
-                    </thead>
-                    <tbody id="positionsHistoryBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #888;">暂无持仓记录</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            </div>
-        </div>
 
-        <div class="panel">
-            <div class="panel-header">
-                <span>交易历史</span>
-                <div>
-                    <button class="panel-move-btn panel-move-left" onclick="movePanelLeft(this)">◀</button>
-                    <button class="panel-move-btn move-up-btn" onclick="movePanelUp(this)">▲</button>
-                    <button class="panel-move-btn move-down-btn" onclick="movePanelDown(this)" disabled>▼</button>
-                    <button class="panel-move-btn panel-move-right" onclick="movePanelRight(this)">▶</button>
-                    <button class="panel-toggle-btn" onclick="togglePanel(this)">▼</button>
-                </div>
-            </div>
-            <div class="panel-content">
-            <table class="order-table">
-                <thead>
-                    <tr>
-                        <th>时间</th>
-                        <th>平台</th>
-                        <th>方向</th>
-                        <th>价格</th>
-                        <th>数量</th>
-                        <th>状态</th>
-                    </tr>
-                </thead>
-                <tbody id="tradeHistoryBody">
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: #888;">暂无交易记录</td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-        </div>
+
 
     <div class="modal" id="addAccountModal">
         <div class="modal-content">
@@ -1262,6 +1719,264 @@
         </div>
     </div>
 
+    <div class="modal" id="historyDataModal">
+        <div class="modal-content">
+            <div class="modal-header">历史数据查询</div>
+            <div class="modal-body">
+                <div class="history-tabs">
+                    <button class="history-tab active" onclick="switchHistoryTab('limit')">限价历史</button>
+                    <button class="history-tab" onclick="switchHistoryTab('positions')">MT5持仓列表</button>
+                </div>
+                <div class="history-filter-section">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label>开始时间</label>
+                            <input type="datetime-local" id="filterStartTime" style="padding: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #fff; font-size: 0.9em; width: 100%;">
+                        </div>
+                        <div class="filter-item">
+                            <label>结束时间</label>
+                            <input type="datetime-local" id="filterEndTime" style="padding: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #fff; font-size: 0.9em; width: 100%;">
+                        </div>
+                        <div class="filter-item">
+                            <label>交易类型</label>
+                            <select id="filterTradeType" style="padding: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; color: #fff; font-size: 0.9em; width: 100%;">
+                                <option value="all">全部</option>
+                                <option value="buy">买入</option>
+                                <option value="sell">卖出</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-primary" onclick="applyHistoryFilter()" style="padding: 8px 20px; font-size: 0.9em;">查询</button>
+                        </div>
+                    </div>
+                    <div class="filter-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">总交易次数</span>
+                            <span class="stat-value" id="statTotalTrades">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总成交量</span>
+                            <span class="stat-value" id="statTotalVolume">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">平均价格</span>
+                            <span class="stat-value" id="statAvgPrice">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">买入次数</span>
+                            <span class="stat-value" id="statBuyCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">卖出次数</span>
+                            <span class="stat-value" id="statSellCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="limitHistoryContent" class="history-content">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>交易对</th>
+                                <th>价格</th>
+                                <th>数量</th>
+                                <th>类型</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyDataTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #888;">暂无限价历史记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="positionsHistoryContent" class="history-content" style="display: none;">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>交易对</th>
+                                <th>方向</th>
+                                <th>持仓量</th>
+                                <th>开仓价</th>
+                                <th>盈亏</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positionsHistoryBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #888;">暂无持仓记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: rgba(255, 255, 255, 0.1); color: #fff;" onclick="resetHistoryFilter()">重置</button>
+                <button class="btn btn-primary" onclick="hideHistoryDataModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="algorithmModal">
+        <div class="modal-content">
+            <div class="modal-header">系统核心算法逻辑管理</div>
+            <div class="modal-body">
+                <div class="algorithm-section">
+                    <h4>1. 套利策略核心逻辑</h4>
+                    <div class="algorithm-content">
+                        <p><strong>正向套利（做多Binance）：</strong></p>
+                        <ul>
+                            <li>当 Bybit 卖价 > Binance 买价 + 阈值时触发</li>
+                            <li>在 Binance 买入，同时在 Bybit 卖出</li>
+                            <li>利用两个平台的价格差异获取利润</li>
+                        </ul>
+                        <p><strong>反向套利（做多Bybit）：</strong></p>
+                        <ul>
+                            <li>当 Binance 卖价 > Bybit 买价 + 阈值时触发</li>
+                            <li>在 Bybit 买入，同时在 Binance 卖出</li>
+                            <li>利用两个平台的价格差异获取利润</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>2. 阶梯挂单策略</h4>
+                    <div class="algorithm-content">
+                        <ul>
+                            <li>根据预设的价差阈值设置多阶梯挂单</li>
+                            <li>每级阶梯对应不同的下单数量和价差触发条件</li>
+                            <li>支持双向、只做多、只做空三种模式</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>3. 风险控制机制</h4>
+                    <div class="algorithm-content">
+                        <ul>
+                            <li>最大追单次数限制</li>
+                            <li>账户保证金水平监控</li>
+                            <li>单腿预警机制</li>
+                            <li>自动平仓保护</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>4. 心跳检测机制</h4>
+                    <div class="algorithm-content">
+                        <ul>
+                            <li>30秒无数据自动标记为断开</li>
+                            <li>实时监控两个平台的连接状态</li>
+                            <li>断开时触发报警提示</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>5. 交易执行流程</h4>
+                    <div class="algorithm-content">
+                        <ul>
+                            <li>价格数据获取 → 价差计算 → 策略判断 → 订单执行 → 状态更新</li>
+                            <li>支持手动和自动两种交易模式</li>
+                            <li>交易历史记录和统计分析</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>6. 反向套利（做多Bybit）平仓策略</h4>
+                    <div class="algorithm-content">
+                        <p><strong>条件1：标准平仓套利</strong></p>
+                        <ul>
+                            <li>平仓不超过账号对应总持仓数量</li>
+                            <li>价格为 binance XAUUSDT 永续 买价(bid)位 + 0.01</li>
+                            <li>卖出 bybit XAUUSD.s 卖价(Ask)位 - 0.01</li>
+                            <li>完成平仓套利</li>
+                        </ul>
+                        <p><strong>条件2：单边成交处理</strong></p>
+                        <ul>
+                            <li>当条件1只有单边成交，检测到另一边未完全成交</li>
+                            <li>系统3秒后应撤单后立即挂单进行追单</li>
+                            <li>此时采用优先级吃单</li>
+                        </ul>
+                        <p><strong>条件3：追单机制</strong></p>
+                        <ul>
+                            <li>当出现符合条件2，则3秒后检测条件2策略是否完成</li>
+                            <li>若无完成继续撤单进行追单</li>
+                            <li>直到达成两边成交的目的</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="algorithm-section">
+                    <h4>7. 正向套利（做多Binance）平仓策略</h4>
+                    <div class="algorithm-content">
+                        <p><strong>条件1：标准平仓套利</strong></p>
+                        <ul>
+                            <li>平仓不超过各账户对应的总持仓数量</li>
+                            <li>价格为买入 bybit XAUUSD.s 买价(bid)位 + 0.01</li>
+                            <li>卖出 binance XAUUSDT 永续 卖价(Ask)位 - 0.01</li>
+                            <li>完成平仓套利</li>
+                        </ul>
+                        <p><strong>条件2：单边成交处理</strong></p>
+                        <ul>
+                            <li>当条件1只有单边成交，检测到另一边未完成成交</li>
+                            <li>系统3秒后应撤单后立即挂单进行追单</li>
+                            <li>此时采用优先级吃单</li>
+                        </ul>
+                        <p><strong>条件3：追单机制</strong></p>
+                        <ul>
+                            <li>当出现符合条件2，则3秒后检测条件2策略是否完成</li>
+                            <li>若未完成继续撤单进行追单</li>
+                            <li>直到达成两边成交的目的</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: rgba(255, 255, 255, 0.1); color: #fff;" onclick="collapseAllAlgorithmSections()">收起全部</button>
+                <button class="btn" style="background: rgba(0, 204, 255, 0.2); color: #00ccff;" onclick="expandAllAlgorithmSections()">展开全部</button>
+                <button class="btn btn-primary" onclick="hideAlgorithmModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="strategyControlModal">
+        <div class="modal-content">
+            <div class="modal-header">策略控制</div>
+            <div class="modal-body">
+                <div class="mode-toggle">
+                    <span class="toggle-label">交易模式</span>
+                    <div class="toggle-button" id="modeSwitch" onclick="toggleMode()"></div>
+                    <span class="toggle-label" id="modeLabel">自动</span>
+                </div>
+                <div class="strategy-controls">
+                    <div class="control-group">
+                        <label>开仓阈值</label>
+                        <input type="number" id="openThreshold" value="0.5" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>平仓阈值</label>
+                        <input type="number" id="closeThreshold" value="0.3" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>订单大小</label>
+                        <input type="number" id="orderSize" value="0.01" step="0.01">
+                    </div>
+                    <div class="control-group">
+                        <label>最大追单次数</label>
+                        <input type="number" id="maxChaseCount" value="5" step="1">
+                    </div>
+                </div>
+                <div class="trade-buttons">
+                    <button class="btn btn-success" id="startStrategyBtn" onclick="startStrategy()">启动策略</button>
+                    <button class="btn btn-danger" id="stopStrategyBtn" onclick="stopStrategy()" disabled>停止策略</button>
+                    <button class="btn btn-primary" onclick="updateParameters()">更新参数</button>
+                    <button class="btn btn-info" onclick="showAlgorithmModal()">算法逻辑</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="hideStrategyControlModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <div class="alert-modal" id="alertModal">
         <div class="alert-modal-content">
             <div class="alert-modal-header" id="alertModalTitle">提示</div>
@@ -1281,6 +1996,13 @@
         let autoMode = true;
         let strategies = {};
         let tradeHistory = [];
+        let bybitHeartbeatTimeout = null;
+        let binanceHeartbeatTimeout = null;
+        let mcoinOpenEnabled = false;
+        let mcoinCloseEnabled = false;
+        let forwardMcoinOpenEnabled = false;
+        let forwardMcoinCloseEnabled = false;
+        const HEARTBEAT_TIMEOUT = 30000; // 30秒无数据视为断开
 
         function initSocket() {
             socket = io({
@@ -1299,18 +2021,22 @@
 
             socket.on('disconnect', () => {
                 console.log('Disconnected from server');
+                updateHeartbeatStatus('bybit', false);
+                updateHeartbeatStatus('binance', false);
             });
 
             socket.on('mt5_price_update', (data) => {
                 bybitPrice = data;
                 updatePrices();
                 updateSpread();
+                updateHeartbeatStatus('bybit', true);
             });
 
             socket.on('binance_price_update', (data) => {
                 binancePrice = data;
                 updatePrices();
                 updateSpread();
+                updateHeartbeatStatus('binance', true);
             });
 
             socket.on('arbitrage_status', (data) => {
@@ -1331,6 +2057,69 @@
             socket.on('error', (error) => {
                 showError(error.message || '发生错误');
             });
+
+            socket.on('order_update', (data) => {
+                updateOrderList(data);
+            });
+
+            socket.on('margin_status_update', (data) => {
+                updateMarginStatus(data);
+            });
+        }
+
+        function updateHeartbeatStatus(platform, connected) {
+            const heartbeatElement = document.getElementById(`${platform}Heartbeat`);
+            const lastUpdateElement = document.getElementById(`${platform}LastUpdate`);
+            const heartbeatLine = document.getElementById(`${platform}HeartbeatLine`);
+
+            if (connected) {
+                heartbeatElement.textContent = '已连接';
+                heartbeatElement.className = 'heartbeat-value connected';
+                heartbeatLine.classList.remove('inactive');
+                heartbeatLine.classList.remove('alert');
+                
+                const now = new Date();
+                lastUpdateElement.textContent = now.toLocaleTimeString();
+                
+                // 清除之前的超时计时器
+                if (platform === 'bybit' && bybitHeartbeatTimeout) {
+                    clearTimeout(bybitHeartbeatTimeout);
+                }
+                if (platform === 'binance' && binanceHeartbeatTimeout) {
+                    clearTimeout(binanceHeartbeatTimeout);
+                }
+                
+                // 设置新的超时计时器
+                if (platform === 'bybit') {
+                    bybitHeartbeatTimeout = setTimeout(() => {
+                        updateHeartbeatStatus('bybit', false);
+                    }, HEARTBEAT_TIMEOUT);
+                }
+                if (platform === 'binance') {
+                    binanceHeartbeatTimeout = setTimeout(() => {
+                        updateHeartbeatStatus('binance', false);
+                    }, HEARTBEAT_TIMEOUT);
+                }
+            } else {
+                // 清除超时计时器
+                if (platform === 'bybit' && bybitHeartbeatTimeout) {
+                    clearTimeout(bybitHeartbeatTimeout);
+                    bybitHeartbeatTimeout = null;
+                }
+                if (platform === 'binance' && binanceHeartbeatTimeout) {
+                    clearTimeout(binanceHeartbeatTimeout);
+                    binanceHeartbeatTimeout = null;
+                }
+                
+                heartbeatElement.textContent = '未连接';
+                heartbeatElement.className = 'heartbeat-value disconnected';
+                heartbeatLine.classList.add('inactive');
+                heartbeatLine.classList.add('alert');
+                lastUpdateElement.textContent = '--';
+                
+                // 触发报警提示
+                showWarning(`${platform === 'bybit' ? 'Bybit MT5' : 'Binance'} 连接已断开，请检查网络连接`);
+            }
         }
 
         function updatePrices() {
@@ -1358,6 +2147,9 @@
                 document.getElementById('spreadPositive').textContent = spreadPositive.toFixed(2);
                 document.getElementById('spreadNegative').textContent = spreadNegative.toFixed(2);
 
+                // 更新实时点差数据
+                updateRealTimeData();
+
                 spreadHistory.push({
                     time: new Date(),
                     positive: spreadPositive,
@@ -1372,6 +2164,119 @@
             }
         }
 
+        function updateRealTimeData() {
+            // 更新反向套利面板点差数据
+            if (bybitPrice && binancePrice && bybitPrice.ask && binancePrice.bid) {
+                const spreadNegative = binancePrice.ask - bybitPrice.bid;
+                const spreadElement = document.getElementById('realTimeSpread');
+                const spreadStatus = document.getElementById('spreadRefreshStatus');
+                
+                if (spreadElement) {
+                    spreadElement.textContent = spreadNegative.toFixed(2);
+                    // 颜色变化跟spreadNegative div一致
+                    // 当spreadNegative < 0时，显示为绿色（与positive类一致）
+                    // 当spreadNegative >= 0时，显示为红色（与negative类一致）
+                    spreadElement.style.color = spreadNegative < 0 ? '#7CFC00' : '#ff4444';
+                }
+                
+                if (spreadStatus) {
+                    spreadStatus.style.color = '#00ff88';
+                    setTimeout(() => {
+                        if (spreadStatus) {
+                            spreadStatus.style.color = '#888';
+                        }
+                    }, 500);
+                }
+            }
+
+            // 更新正向套利面板点差数据
+            if (bybitPrice && binancePrice && bybitPrice.ask && binancePrice.bid) {
+                const spreadPositive = bybitPrice.ask - binancePrice.bid;
+                const forwardSpreadElement = document.getElementById('forwardRealTimeSpread');
+                const forwardSpreadStatus = document.getElementById('forwardSpreadRefreshStatus');
+                
+                if (forwardSpreadElement) {
+                    forwardSpreadElement.textContent = spreadPositive.toFixed(2);
+                    // 颜色变化跟spreadPositive div一致
+                    // 当spreadPositive > 0时，显示为绿色
+                    // 当spreadPositive <= 0时，显示为红色
+                    forwardSpreadElement.style.color = spreadPositive > 0 ? '#7CFC00' : '#ff4444';
+                }
+                
+                if (forwardSpreadStatus) {
+                    forwardSpreadStatus.style.color = '#00ff88';
+                    setTimeout(() => {
+                        if (forwardSpreadStatus) {
+                            forwardSpreadStatus.style.color = '#888';
+                        }
+                    }, 500);
+                }
+            }
+
+            // 更新Binance账号数据
+            updateAccountData('binance');
+            updateForwardAccountData('binance');
+            
+            // 更新Bybit账号数据
+            updateAccountData('bybit');
+            updateForwardAccountData('bybit');
+        }
+
+        function updateForwardAccountData(platform) {
+            // 更新正向套利面板的账户数据
+            // 这里应该从服务器获取最新的账户数据
+            // 暂时使用模拟数据，实际应用中应该从服务器获取
+            const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
+            const account = accounts.find(acc => acc.platform === platform);
+            
+            const accountElement = document.getElementById(`forwardRealTime${platform.charAt(0).toUpperCase() + platform.slice(1)}`);
+            const statusElement = document.getElementById(`forward${platform.charAt(0).toUpperCase() + platform.slice(1)}RefreshStatus`);
+            
+            if (accountElement) {
+                if (account) {
+                    accountElement.textContent = account.balance ? account.balance.toFixed(2) : '0.00';
+                } else {
+                    accountElement.textContent = '0.00';
+                }
+            }
+            
+            if (statusElement) {
+                statusElement.style.color = '#00ff88';
+                setTimeout(() => {
+                    if (statusElement) {
+                        statusElement.style.color = '#888';
+                    }
+                }, 500);
+            }
+        }
+
+        function updateAccountData(platform) {
+            // 这里应该从服务器获取最新的账户数据
+            // 暂时使用模拟数据，实际应用中应该从服务器获取
+            const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
+            const account = accounts.find(acc => acc.platform === platform);
+            
+            const accountElement = document.getElementById(`realTime${platform.charAt(0).toUpperCase() + platform.slice(1)}`);
+            const statusElement = document.getElementById(`${platform}RefreshStatus`);
+            
+            if (accountElement) {
+                if (account) {
+                    accountElement.textContent = account.balance ? account.balance.toFixed(2) : '0.00';
+                } else {
+                    accountElement.textContent = '0.00';
+                }
+            }
+            
+            if (statusElement) {
+                statusElement.style.color = '#00ff88';
+                setTimeout(() => {
+                    if (statusElement) {
+                        statusElement.style.color = '#888';
+                    }
+                }, 500);
+            }
+        }
+
         function updateChart() {
             if (!spreadChart) {
                 const ctx = document.getElementById('spreadChart').getContext('2d');
@@ -1380,13 +2285,13 @@
                     data: {
                         labels: spreadHistory.map(h => h.time.toLocaleTimeString()),
                         datasets: [{
-                            label: '正向价差',
+                            label: '做多Binance',
                             data: spreadHistory.map(h => h.positive),
                             borderColor: '#7CFC00',
                             backgroundColor: 'rgba(124, 252, 0, 0.1)',
                             tension: 0.4
                         }, {
-                            label: '负向价差',
+                            label: '做多Bybit',
                             data: spreadHistory.map(h => h.negative),
                             borderColor: '#ff4444',
                             backgroundColor: 'rgba(255, 68, 68, 0.1)',
@@ -1549,20 +2454,16 @@
                 </div>
                 <div class="layer-params">
                     <div class="control-group">
-                        <label>价差触发</label>
+                        <label>开仓价</label>
+                        <input type="number" class="grid-open-price" value="0" step="0.01">
+                    </div>
+                    <div class="control-group">
+                        <label>阈值</label>
                         <input type="number" class="grid-spread" value="0.5" step="0.1">
                     </div>
                     <div class="control-group">
-                        <label>下单数量</label>
-                        <input type="number" class="grid-size" value="0.01" step="0.01">
-                    </div>
-                    <div class="control-group">
-                        <label>开仓方向</label>
-                        <select class="grid-direction">
-                            <option value="both">双向</option>
-                            <option value="long">只做多</option>
-                            <option value="short">只做空</option>
-                        </select>
+                        <label>下单数量限制</label>
+                        <input type="number" class="grid-size-limit" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
                     </div>
                 </div>
             `;
@@ -1579,29 +2480,155 @@
             }
         }
 
+        function addForwardGridLayer() {
+            const container = document.getElementById('forwardGridStrategyContainer');
+            const layers = container.querySelectorAll('.grid-strategy-layer');
+            const layerNum = layers.length + 1;
+
+            const layerDiv = document.createElement('div');
+            layerDiv.className = 'grid-strategy-layer';
+            layerDiv.dataset.layer = layerNum;
+            layerDiv.innerHTML = `
+                <div class="layer-header">
+                    <span class="layer-title">阶梯 ${layerNum}</span>
+                    <div class="layer-actions">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="layer-enable" checked>
+                            <span>启用</span>
+                        </label>
+                        <button class="btn-small delete" onclick="removeForwardGridLayer(${layerNum})">删除</button>
+                    </div>
+                </div>
+                <div class="layer-params">
+                    <div class="control-group">
+                        <label>开仓价</label>
+                        <input type="number" class="grid-open-price" value="0" step="0.01">
+                    </div>
+                    <div class="control-group">
+                        <label>阈值</label>
+                        <input type="number" class="grid-spread" value="0.5" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>下单数量限制</label>
+                        <input type="number" class="grid-size-limit" value="1" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
+                    </div>
+                </div>
+            `;
+            container.appendChild(layerDiv);
+            showSuccess(`已添加阶梯 ${layerNum}`);
+        }
+
+        function removeForwardGridLayer(layerNum) {
+            const container = document.getElementById('forwardGridStrategyContainer');
+            const layer = container.querySelector(`[data-layer="${layerNum}"]`);
+            if (layer) {
+                layer.remove();
+                showSuccess(`已删除阶梯 ${layerNum}`);
+            }
+        }
+
         function saveGridStrategy() {
+            // 检查账户连接状态
+            const bybitHeartbeat = document.getElementById('bybitHeartbeat');
+            const binanceHeartbeat = document.getElementById('binanceHeartbeat');
+            
+            if (!bybitHeartbeat || !binanceHeartbeat) {
+                showError('无法获取账户连接状态');
+                return;
+            }
+            
+            const bybitConnected = bybitHeartbeat.textContent === '已连接';
+            const binanceConnected = binanceHeartbeat.textContent === '已连接';
+            
+            if (!bybitConnected || !binanceConnected) {
+                showError('平台账户未连接，无法保存反向套利策略');
+                return;
+            }
+
             const container = document.getElementById('gridStrategyContainer');
             const layers = container.querySelectorAll('.grid-strategy-layer');
             const strategy = [];
 
+            // 验证M币设置一次下单数量
+            const mCoinOrderSize = parseInt(document.getElementById('mCoinOrderSize').value);
+            if (isNaN(mCoinOrderSize) || mCoinOrderSize < 1) {
+                showError('M币设置一次下单数量必须为正整数');
+                return;
+            }
+
+            let valid = true;
+
             layers.forEach(layer => {
                 const enable = layer.querySelector('.layer-enable').checked;
+                const openPrice = parseFloat(layer.querySelector('.grid-open-price').value);
                 const spread = parseFloat(layer.querySelector('.grid-spread').value);
-                const size = parseFloat(layer.querySelector('.grid-size').value);
-                const direction = layer.querySelector('.grid-direction').value;
+                const sizeLimit = parseInt(layer.querySelector('.grid-size-limit').value);
 
+                // 验证输入值
                 if (enable) {
+                    if (isNaN(openPrice) || openPrice < 0) {
+                        showError(`阶梯 ${layer.dataset.layer} 的开仓价必须为非负数`);
+                        valid = false;
+                    }
+                    if (isNaN(spread) || spread < 0) {
+                        showError(`阶梯 ${layer.dataset.layer} 的阈值必须为非负数`);
+                        valid = false;
+                    }
+                    if (isNaN(sizeLimit) || sizeLimit < 1) {
+                        showError(`阶梯 ${layer.dataset.layer} 的下单数量限制必须为正整数`);
+                        valid = false;
+                    }
+                }
+
+                if (enable && valid) {
+                    const binanceSizeLimit = sizeLimit;
+                    const bybitSizeLimit = binanceSizeLimit / 100; // bybit下单数量限制为binance的1/100
+                    
                     strategy.push({
                         layer: layer.dataset.layer,
+                        open_price: openPrice,
                         spread: spread,
-                        size: size,
-                        direction: direction
+                        binance_size_limit: binanceSizeLimit,
+                        bybit_size_limit: bybitSizeLimit,
+                        strategy_type: 'reverse_arbitrage_bybit' // 明确指定为反向套利（做多Bybit）策略
                     });
                 }
             });
 
-            console.log('Saved grid strategy:', strategy);
-            showSuccess('阶梯策略已保存');
+            if (!valid) {
+                return;
+            }
+
+            // 保存策略到数据库
+            const strategyData = {
+                strategy: strategy,
+                mcoin_order_size: mCoinOrderSize,
+                open_sync: parseInt(document.getElementById('openSyncInput').value) || 1,
+                close_sync: parseInt(document.getElementById('closeSyncInput').value) || 1
+            };
+
+            // 发送到服务器保存
+            fetch('/api/strategy/save-grid', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(strategyData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('保存反向套利（做多Bybit）阶梯策略成功:', data.data);
+                    showSuccess('反向套利（做多Bybit）阶梯策略已保存到数据库');
+                } else {
+                    console.error('保存反向套利（做多Bybit）阶梯策略失败:', data.message);
+                    showError('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存反向套利（做多Bybit）阶梯策略出错:', error);
+                showError('保存出错: ' + error.message);
+            });
         }
 
         async function startStrategy() {
@@ -1722,18 +2749,92 @@
             }
         }
 
+        function updateManualPrice() {
+            const accountSelect = document.getElementById('manualAccountSelect');
+            const directionSelect = document.getElementById('manualDirection');
+            const priceInput = document.getElementById('manualPrice');
+
+            const accountId = accountSelect.value;
+            const direction = directionSelect.value;
+
+            if (!accountId) {
+                priceInput.value = '';
+                return;
+            }
+
+            // Get base price based on account type
+            let basePrice = 0;
+            
+            // Determine account type from account ID
+            if (accountId.includes('binance')) {
+                // For Binance account, use binancePrice
+                if (binancePrice && binancePrice.bid) {
+                    basePrice = binancePrice.bid;
+                }
+            } else if (accountId.includes('bybit')) {
+                // For Bybit account, use bybitPrice
+                if (bybitPrice && bybitPrice.bid) {
+                    basePrice = bybitPrice.bid;
+                }
+            }
+
+            if (basePrice > 0) {
+                // Calculate price: base price + 0.01
+                const calculatedPrice = basePrice + 0.01;
+                priceInput.value = calculatedPrice.toFixed(2);
+                calculateMargin(); // Update margin calculation
+            }
+        }
+
+        function updateManualSize() {
+            const accountSelect = document.getElementById('manualAccountSelect');
+            const sizeInput = document.getElementById('manualSize');
+
+            const accountId = accountSelect.value;
+
+            if (!accountId) {
+                sizeInput.value = '0.01'; // Reset to default
+                calculateMargin();
+                return;
+            }
+
+            // Check if account type is binance-real
+            if (accountId.includes('binance') && accountId.includes('real')) {
+                sizeInput.value = '1';
+            } else {
+                sizeInput.value = '0.01'; // Default value for other accounts
+            }
+
+            calculateMargin(); // Update margin calculation
+        }
+
         async function executeManualTrade() {
             const accountId = document.getElementById('manualAccountSelect').value;
             const direction = document.getElementById('manualDirection').value;
             const price = parseFloat(document.getElementById('manualPrice').value);
             const size = parseFloat(document.getElementById('manualSize').value);
 
-            if (!accountId || !price || !size) {
-                showError('请填写所有必填字段');
+            if (!accountId) {
+                showError('请选择账户');
                 return;
             }
 
+            if (!price || isNaN(price) || price <= 0) {
+                showError('请输入有效的价格');
+                return;
+            }
+
+            if (!size || isNaN(size) || size <= 0) {
+                showError('请输入有效的数量');
+                return;
+            }
+
+            // Get account type for better error messages
+            const accountType = accountId.includes('binance') ? 'Binance' : 'Bybit';
+
             try {
+                showSuccess('正在执行交易...');
+                
                 const response = await fetch('/api/arbitrage/manual-trade', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1748,12 +2849,15 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showSuccess('订单已提交');
+                    showSuccess(`${accountType} ${direction === 'buy' ? '买入' : '卖出'} 订单已提交`);
+                    // Clear fields or reset to defaults
+                    document.getElementById('manualPrice').value = '';
+                    updateManualSize(); // Reset size based on account
                 } else {
-                    showError(result.message || '下单失败');
+                    showError(`${accountType} 下单失败: ${result.message || '未知错误'}`);
                 }
             } catch (error) {
-                showError('请求失败: ' + error.message);
+                showError('网络请求失败: ' + error.message);
             }
         }
 
@@ -1813,6 +2917,18 @@
                                     <span class="info-label">盈亏</span>
                                     <span class="info-value ${profit >= 0 ? 'profit' : 'loss'}">${profit >= 0 ? '+' : ''}${profit.toFixed(2)}</span>
                                 </div>
+                                ${account.platform === 'binance' ? `
+                                <div class="info-item">
+                                    <span class="info-label">掉期费</span>
+                                    <span class="info-value" id="swapFee-${account.account_id}">--</span>
+                                </div>
+                                ` : ''}
+                                ${account.platform === 'bybit' ? `
+                                <div class="info-item">
+                                    <span class="info-label">资金费</span>
+                                    <span class="info-value" id="fundingFee-${account.account_id}">--</span>
+                                </div>
+                                ` : ''}
                             </div>
                             <div class="account-item-actions">
                                 <button class="btn-small ${account.connected ? 'disconnect' : 'connect'}" 
@@ -1824,6 +2940,20 @@
                         `;
                         accountList.appendChild(div);
 
+                        // 计算并显示掉期费/资金费
+                        if (account.connected) {
+                            if (account.platform === 'binance') {
+                                // 模拟计算掉期费（实际应从API获取）
+                                const swapFee = balance * 0.0001; // 假设日费率0.01%
+                                document.getElementById(`swapFee-${account.account_id}`).textContent = swapFee.toFixed(4);
+                            } else if (account.platform === 'bybit') {
+                                // 模拟计算资金费（实际应从API获取）
+                                const fundingRate = 0.0001; // 假设每8小时费率0.01%
+                                const fundingFee = balance * fundingRate * 3; // 每日3次资金费
+                                document.getElementById(`fundingFee-${account.account_id}`).textContent = fundingFee.toFixed(4);
+                            }
+                        }
+
                         const select = document.getElementById('manualAccountSelect');
                         const option = document.createElement('option');
                         option.value = account.account_id;
@@ -1831,10 +2961,21 @@
                         select.appendChild(option);
                     });
 
-                    if (result.accounts.length > 0) {
-                        document.getElementById('connectionStatus').textContent = '已连接';
-                        document.getElementById('connectionStatus').className = 'status-badge connected';
-                    }
+                    // 计算总盈利
+                    let totalProfit = 0;
+                    result.accounts.forEach(account => {
+                        const accountInfo = account.account_info || {};
+                        const profit = accountInfo.profit || 0;
+                        totalProfit += profit;
+                    });
+
+                    // 更新总盈利显示
+                    const totalProfitElement = document.getElementById('totalProfit');
+                    totalProfitElement.textContent = (totalProfit >= 0 ? '+' : '') + totalProfit.toFixed(2);
+                    totalProfitElement.className = 'total-profit-value' + (totalProfit < 0 ? ' negative' : '');
+
+                    // Update manual size based on selected account
+                    updateManualSize();
                 }
             } catch (error) {
                 console.error('Failed to load accounts:', error);
@@ -1894,6 +3035,119 @@
             }
         }
 
+        function updateOrderList(data) {
+            const forwardList = document.getElementById('forwardOrderList');
+            const reverseList = document.getElementById('reverseOrderList');
+            
+            // 正向套利挂单
+            if (data.strategy_type === 'forward_arbitrage_binance') {
+                if (data.orders && data.orders.length > 0) {
+                    forwardList.innerHTML = '';
+                    data.orders.forEach(order => {
+                        const orderItem = document.createElement('div');
+                        orderItem.style.padding = '8px';
+                        orderItem.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+                        orderItem.style.marginBottom = '5px';
+                        orderItem.innerHTML = `
+                            <div style="font-size: 0.8em; color: #888;">${order.symbol}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600;">${order.side}</span>
+                                <span>${order.price.toFixed(2)}</span>
+                                <span>${order.quantity.toFixed(2)}</span>
+                            </div>
+                            <div style="font-size: 0.7em; color: #888; margin-top: 3px;">${new Date(order.timestamp).toLocaleTimeString()}</div>
+                        `;
+                        forwardList.appendChild(orderItem);
+                    });
+                } else {
+                    forwardList.innerHTML = '<div style="font-size: 0.9em; color: #888; text-align: center; margin: 20px 0;">暂无挂单</div>';
+                }
+            }
+            
+            // 反向套利挂单
+            if (data.strategy_type === 'reverse_arbitrage_bybit') {
+                if (data.orders && data.orders.length > 0) {
+                    reverseList.innerHTML = '';
+                    data.orders.forEach(order => {
+                        const orderItem = document.createElement('div');
+                        orderItem.style.padding = '8px';
+                        orderItem.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+                        orderItem.style.marginBottom = '5px';
+                        orderItem.innerHTML = `
+                            <div style="font-size: 0.8em; color: #888;">${order.symbol}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600;">${order.side}</span>
+                                <span>${order.price.toFixed(2)}</span>
+                                <span>${order.quantity.toFixed(2)}</span>
+                            </div>
+                            <div style="font-size: 0.7em; color: #888; margin-top: 3px;">${new Date(order.timestamp).toLocaleTimeString()}</div>
+                        `;
+                        reverseList.appendChild(orderItem);
+                    });
+                } else {
+                    reverseList.innerHTML = '<div style="font-size: 0.9em; color: #888; text-align: center; margin: 20px 0;">暂无挂单</div>';
+                }
+            }
+        }
+
+        function updateMarginStatus(data) {
+            // Binance 保证金状态
+            if (data.platform === 'binance') {
+                const marginRate = document.getElementById('binanceMarginRate');
+                const riskRate = document.getElementById('binanceRiskRate');
+                const equity = document.getElementById('binanceEquity');
+                
+                if (data.equity && data.maintenance_margin) {
+                    const calculatedMarginRate = (data.equity / data.maintenance_margin * 100).toFixed(2);
+                    const calculatedRiskRate = (data.maintenance_margin / data.equity * 100).toFixed(2);
+                    
+                    marginRate.textContent = calculatedMarginRate + '%';
+                    riskRate.textContent = calculatedRiskRate + '%';
+                    equity.textContent = data.equity.toFixed(2);
+                    
+                    // 根据风险率设置颜色
+                    if (parseFloat(calculatedRiskRate) > 90) {
+                        riskRate.style.color = '#ff4444';
+                        marginRate.style.color = '#ff4444';
+                    } else if (parseFloat(calculatedRiskRate) > 70) {
+                        riskRate.style.color = '#ffaa00';
+                        marginRate.style.color = '#ffaa00';
+                    } else {
+                        riskRate.style.color = '#00ff88';
+                        marginRate.style.color = '#00ff88';
+                    }
+                }
+            }
+            
+            // Bybit 保证金状态
+            if (data.platform === 'bybit') {
+                const marginRate = document.getElementById('bybitMarginRate');
+                const riskRate = document.getElementById('bybitRiskRate');
+                const equity = document.getElementById('bybitEquity');
+                
+                if (data.equity && data.maintenance_margin) {
+                    const calculatedMarginRate = (data.equity / data.maintenance_margin * 100).toFixed(2);
+                    const calculatedRiskRate = (data.maintenance_margin / data.equity * 100).toFixed(2);
+                    
+                    marginRate.textContent = calculatedMarginRate + '%';
+                    riskRate.textContent = calculatedRiskRate + '%';
+                    equity.textContent = data.equity.toFixed(2);
+                    
+                    // 根据风险率设置颜色
+                    if (parseFloat(calculatedRiskRate) > 90) {
+                        riskRate.style.color = '#ff4444';
+                        marginRate.style.color = '#ff4444';
+                    } else if (parseFloat(calculatedRiskRate) > 70) {
+                        riskRate.style.color = '#ffaa00';
+                        marginRate.style.color = '#ffaa00';
+                    } else {
+                        riskRate.style.color = '#00ff88';
+                        marginRate.style.color = '#00ff88';
+                    }
+                }
+            }
+        }
+
         function updateOrderTable() {
             const tbody = document.getElementById('orderTableBody');
             tbody.innerHTML = '';
@@ -1918,6 +3172,10 @@
 
         function showSuccess(message) {
             showAlertModal('成功', message, 'success');
+        }
+
+        function showWarning(message) {
+            showAlertModal('警告', message, 'info');
         }
 
         function showAlertModal(title, message, type = 'info') {
@@ -1954,9 +3212,68 @@
                 }
             });
 
+            // 加载保存的设置
+            loadSavedSettings();
+
             initSocket();
             updateMoveButtons();
         });
+
+        function loadSavedSettings() {
+            // 加载反向套利（做多Bybit）设置
+            fetch('/api/sync/settings?strategy_type=reverse_arbitrage_bybit')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const settings = data.data;
+                        document.getElementById('openSyncInput').value = settings.open_sync || 1;
+                        document.getElementById('closeSyncInput').value = settings.close_sync || 1;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load reverse arbitrage settings:', error);
+                });
+
+            // 加载正向套利（做多Binance）设置
+            fetch('/api/sync/settings?strategy_type=forward_arbitrage_binance')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const settings = data.data;
+                        document.getElementById('forwardOpenSyncInput').value = settings.open_sync || 1;
+                        document.getElementById('forwardCloseSyncInput').value = settings.close_sync || 1;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load forward arbitrage settings:', error);
+                });
+
+            // 加载反向套利（做多Bybit）阶梯策略设置
+            fetch('/api/strategy/settings?strategy_type=reverse_arbitrage_bybit')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const settings = data.data;
+                        document.getElementById('mCoinOrderSize').value = settings.mcoin_order_size || 1;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load reverse arbitrage strategy settings:', error);
+                });
+
+            // 加载正向套利（做多Binance）阶梯策略设置
+            fetch('/api/strategy/settings?strategy_type=forward_arbitrage_binance')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const settings = data.data;
+                        document.getElementById('forwardMCoinOrderSize').value = settings.mcoin_order_size || 1;
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load forward arbitrage strategy settings:', error);
+                });
+        }
 
         function showAddAccountModal() {
             const modal = document.getElementById('addAccountModal');
@@ -1981,6 +3298,1048 @@
             document.getElementById('newAccountId').value = '';
             document.getElementById('newAccountPassword').value = '';
             document.getElementById('newAccountServer').value = '';
+        }
+
+        function showHistoryDataModal() {
+            const modal = document.getElementById('historyDataModal');
+            modal.classList.add('show');
+            loadHistoryData();
+        }
+
+        function hideHistoryDataModal() {
+            const modal = document.getElementById('historyDataModal');
+            modal.classList.remove('show');
+        }
+
+        function showAlgorithmModal() {
+            const modal = document.getElementById('algorithmModal');
+            modal.classList.add('show');
+        }
+
+        function hideAlgorithmModal() {
+            const modal = document.getElementById('algorithmModal');
+            modal.classList.remove('show');
+        }
+
+        function showStrategyControlModal() {
+            const modal = document.getElementById('strategyControlModal');
+            modal.classList.add('show');
+        }
+
+        function hideStrategyControlModal() {
+            const modal = document.getElementById('strategyControlModal');
+            modal.classList.remove('show');
+        }
+
+        function toggleMcoinOpen() {
+            // 检查账户连接状态
+            const bybitHeartbeat = document.getElementById('bybitHeartbeat');
+            const binanceHeartbeat = document.getElementById('binanceHeartbeat');
+            
+            if (!bybitHeartbeat || !binanceHeartbeat) {
+                showError('无法获取账户连接状态');
+                return;
+            }
+            
+            const bybitConnected = bybitHeartbeat.textContent === '已连接';
+            const binanceConnected = binanceHeartbeat.textContent === '已连接';
+            
+            if (!bybitConnected || !binanceConnected) {
+                showError('平台账户未连接，无法启用反向套利算法');
+                return;
+            }
+            
+            mcoinOpenEnabled = !mcoinOpenEnabled;
+            const btn = document.getElementById('mCoinOpenBtn');
+            if (mcoinOpenEnabled) {
+                btn.textContent = '停用开仓';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                showSuccess('M币开仓已启用');
+                
+                // 启动反向套利（做多Bybit）算法
+                startReverseArbitrageAlgorithm();
+            } else {
+                btn.textContent = '启用开仓';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-success');
+                showSuccess('M币开仓已停用');
+            }
+        }
+
+        function startReverseArbitrageAlgorithm() {
+            // 获取一次下单数量
+            const orderSize = parseInt(document.getElementById('mCoinOrderSize').value) || 0;
+            // 获取开仓数据同步数量
+            const openSyncCount = parseInt(document.getElementById('openSyncInput').value) || 1;
+            // 获取平仓数据同步数量
+            const closeSyncCount = parseInt(document.getElementById('closeSyncInput').value) || 1;
+            
+            // 获取阶梯策略条件
+            const gridLayers = document.querySelectorAll('.grid-strategy-layer');
+            const strategyConditions = [];
+            
+            gridLayers.forEach(layer => {
+                const enableCheckbox = layer.querySelector('.layer-enable');
+                if (enableCheckbox && enableCheckbox.checked) {
+                    const spreadInput = layer.querySelector('.grid-spread');
+                    const sizeLimitInput = layer.querySelector('.grid-size-limit');
+                    
+                    if (spreadInput && sizeLimitInput) {
+                        const binanceSizeLimit = parseInt(sizeLimitInput.value) || 1;
+                        const bybitSizeLimit = binanceSizeLimit / 100; // bybit下单数量限制为binance的1/100
+                        
+                        strategyConditions.push({
+                            spread: parseFloat(spreadInput.value) || 0,
+                            binanceSizeLimit: binanceSizeLimit,
+                            bybitSizeLimit: bybitSizeLimit,
+                            layer: parseInt(layer.dataset.layer) || 1
+                        });
+                    }
+                }
+            });
+            
+            // 启动反向套利（做多Bybit）算法
+            console.log('启动反向套利（做多Bybit）算法:', {
+                orderSize: orderSize,
+                openSyncCount: openSyncCount,
+                closeSyncCount: closeSyncCount,
+                strategyConditions: strategyConditions,
+                strategyType: 'reverse_arbitrage_bybit' // 明确指定为反向套利（做多Bybit）策略
+            });
+            
+            // 执行反向套利交易逻辑
+            executeReverseArbitrage(orderSize, strategyConditions);
+            
+            showSuccess(`反向套利（做多Bybit）算法已启动，下单数量: ${orderSize || '根据阶梯策略'}，开仓数据同步数量: ${openSyncCount}，平仓数据同步数量: ${closeSyncCount}`);
+        }
+
+        function executeReverseArbitrage(orderSize, strategyConditions) {
+            // 检查价格数据是否可用
+            if (!bybitPrice || !binancePrice || !bybitPrice.bid || !binancePrice.ask) {
+                showError('价格数据不可用，无法执行反向套利交易');
+                return;
+            }
+            
+            // 计算交易价格
+            // binance卖空价格：卖价(Ask)位 - 0.01
+            const binanceSellPrice = binancePrice.ask - 0.01;
+            // bybit买入价格：买价(Bid)位 + 0.01
+            const bybitBuyPrice = bybitPrice.bid + 0.01;
+            
+            // 计算点差
+            const spread = binancePrice.ask - bybitPrice.bid;
+            
+            // 检查是否符合阶梯策略条件
+            const validConditions = strategyConditions.filter(condition => spread >= condition.spread);
+            
+            if (validConditions.length === 0) {
+                showInfo('当前点差不符合任何阶梯策略条件，无法执行反向套利交易');
+                return;
+            }
+            
+            // 确定交易数量
+            let tradeSize;
+            if (orderSize > 0) {
+                // 使用用户指定的下单数量
+                tradeSize = orderSize;
+            } else {
+                // 根据阶梯策略条件确定交易数量
+                // 取第一个符合条件的阶梯的binanceSizeLimit
+                tradeSize = validConditions[0].binanceSizeLimit;
+            }
+            
+            // 计算bybit交易数量（binance的1/100）
+            const bybitTradeSize = tradeSize / 100;
+            
+            // 执行交易
+            console.log('执行反向套利（做多Bybit）交易:', {
+                binanceSellPrice: binanceSellPrice,
+                bybitBuyPrice: bybitBuyPrice,
+                binanceTradeSize: tradeSize,
+                bybitTradeSize: bybitTradeSize,
+                spread: spread,
+                validConditions: validConditions
+            });
+            
+            // 这里应该调用API执行实际的交易
+            // 暂时使用模拟交易，实际应用中应该调用API
+            simulateTrade('binance', 'sell', binanceSellPrice, tradeSize);
+            simulateTrade('bybit', 'buy', bybitBuyPrice, bybitTradeSize);
+            
+            // 保存交易记录
+            saveTradeRecord({
+                type: 'reverse_arbitrage',
+                binancePrice: binanceSellPrice,
+                bybitPrice: bybitBuyPrice,
+                binanceSize: tradeSize,
+                bybitSize: bybitTradeSize,
+                spread: spread,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function simulateTrade(platform, side, price, size) {
+            console.log(`模拟${platform}${side === 'buy' ? '买入' : '卖出'}交易:`, {
+                platform: platform,
+                side: side,
+                price: price,
+                size: size
+            });
+            
+            // 这里应该调用API执行实际的交易
+            // 暂时使用模拟交易，实际应用中应该调用API
+            showSuccess(`${platform}${side === 'buy' ? '买入' : '卖出'}交易已执行: 价格 ${price.toFixed(2)}, 数量 ${size}`);
+            
+            // 返回模拟的交易结果
+            // 实际应用中应该根据API返回的结果
+            return {
+                filled: true, // 模拟成交
+                price: price,
+                size: size,
+                platform: platform,
+                side: side
+            };
+        }
+
+        function saveTradeRecord(tradeData) {
+            // 保存交易记录到数据库
+            fetch('/api/trade/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(tradeData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('交易记录保存成功:', data.data);
+                } else {
+                    console.error('交易记录保存失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存交易记录出错:', error);
+            });
+        }
+
+        function toggleMcoinClose() {
+            mcoinCloseEnabled = !mcoinCloseEnabled;
+            const btn = document.getElementById('mCoinCloseBtn');
+            if (mcoinCloseEnabled) {
+                btn.textContent = '停用平仓';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-warning');
+                showSuccess('M币平仓已启用');
+                
+                // 启动反向套利（做多Bybit）平仓策略
+                startReverseArbitrageCloseStrategy();
+            } else {
+                btn.textContent = '启用平仓';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-danger');
+                showSuccess('M币平仓已停用');
+            }
+        }
+
+        function startReverseArbitrageCloseStrategy() {
+            // 启动反向套利（做多Bybit）平仓策略
+            console.log('启动反向套利（做多Bybit）平仓策略');
+            
+            // 检查价格数据是否可用
+            if (!bybitPrice || !binancePrice || !bybitPrice.ask || !binancePrice.bid) {
+                showError('价格数据不可用，无法执行反向套利平仓策略');
+                return;
+            }
+            
+            // 获取账号对应总持仓数量
+            const totalPosition = getTotalPosition();
+            if (totalPosition <= 0) {
+                showInfo('账号无持仓，无需平仓');
+                return;
+            }
+            
+            // 执行条件1：标准平仓套利
+            executeReverseArbitrageClose(totalPosition);
+        }
+
+        function executeReverseArbitrageClose(positionSize) {
+            // 执行反向套利（做多Bybit）平仓策略
+            
+            // 计算交易价格
+            // binance买入价格：买价(Bid)位 + 0.01
+            const binanceBuyPrice = binancePrice.bid + 0.01;
+            // bybit卖出价格：卖价(Ask)位 - 0.01
+            const bybitSellPrice = bybitPrice.ask - 0.01;
+            
+            // 执行平仓交易
+            console.log('执行反向套利（做多Bybit）平仓交易:', {
+                binanceBuyPrice: binanceBuyPrice,
+                bybitSellPrice: bybitSellPrice,
+                positionSize: positionSize
+            });
+            
+            // 模拟交易执行
+            const binanceResult = simulateTrade('binance', 'buy', binanceBuyPrice, positionSize);
+            const bybitResult = simulateTrade('bybit', 'sell', bybitSellPrice, positionSize / 100);
+            
+            // 检查是否双边成交
+            checkTradeCompletion(binanceResult, bybitResult, positionSize);
+        }
+
+        function checkTradeCompletion(binanceResult, bybitResult, positionSize) {
+            // 检查交易是否完成
+            // 这里应该根据实际的交易结果进行判断
+            // 暂时使用模拟结果，实际应用中应该根据API返回结果判断
+            
+            const binanceFilled = binanceResult && binanceResult.filled;
+            const bybitFilled = bybitResult && bybitResult.filled;
+            
+            if (binanceFilled && bybitFilled) {
+                // 双边成交，平仓完成
+                showSuccess('反向套利（做多Bybit）平仓交易已完成');
+                return;
+            } else if (binanceFilled || bybitFilled) {
+                // 单边成交，执行条件2：3秒后撤单追单
+                showInfo('检测到单边成交，3秒后执行追单策略');
+                
+                setTimeout(() => {
+                    // 撤单
+                    cancelOrders();
+                    // 立即挂单进行追单，采用优先级吃单
+                    executeChaseOrder(positionSize);
+                }, 3000);
+            } else {
+                // 两边都未成交，直接执行追单
+                executeChaseOrder(positionSize);
+            }
+        }
+
+        function executeChaseOrder(positionSize) {
+            // 执行追单策略
+            console.log('执行反向套利（做多Bybit）追单策略:', {
+                positionSize: positionSize
+            });
+            
+            // 计算交易价格（优先级吃单）
+            // binance买入价格：当前买价(Bid)位 + 0.02（更高价格确保成交）
+            const binanceBuyPrice = binancePrice.bid + 0.02;
+            // bybit卖出价格：当前卖价(Ask)位 - 0.02（更低价格确保成交）
+            const bybitSellPrice = bybitPrice.ask - 0.02;
+            
+            // 模拟交易执行
+            const binanceResult = simulateTrade('binance', 'buy', binanceBuyPrice, positionSize);
+            const bybitResult = simulateTrade('bybit', 'sell', bybitSellPrice, positionSize / 100);
+            
+            // 3秒后检测是否完成
+            setTimeout(() => {
+                checkChaseOrderCompletion(binanceResult, bybitResult, positionSize);
+            }, 3000);
+        }
+
+        function checkChaseOrderCompletion(binanceResult, bybitResult, positionSize) {
+            // 检查追单是否完成
+            
+            const binanceFilled = binanceResult && binanceResult.filled;
+            const bybitFilled = bybitResult && bybitResult.filled;
+            
+            if (binanceFilled && bybitFilled) {
+                // 双边成交，平仓完成
+                showSuccess('反向套利（做多Bybit）追单交易已完成');
+                return;
+            } else {
+                // 仍未完成，继续追单
+                showInfo('追单未完成，继续执行追单策略');
+                executeChaseOrder(positionSize);
+            }
+        }
+
+        function cancelOrders() {
+            // 取消未成交的订单
+            console.log('取消未成交的订单');
+            // 实际应用中应该调用API取消订单
+        }
+
+        function getTotalPosition() {
+            // 获取账号对应总持仓数量
+            // 这里应该从API获取实际的持仓数量
+            // 暂时根据输入的数值作为binance下单数量限制
+            const gridLayers = document.querySelectorAll('.grid-strategy-layer');
+            let maxBinanceSizeLimit = 0;
+            
+            gridLayers.forEach(layer => {
+                const enableCheckbox = layer.querySelector('.layer-enable');
+                if (enableCheckbox && enableCheckbox.checked) {
+                    const sizeLimitInput = layer.querySelector('.grid-size-limit');
+                    if (sizeLimitInput) {
+                        const binanceSizeLimit = parseInt(sizeLimitInput.value) || 1;
+                        if (binanceSizeLimit > maxBinanceSizeLimit) {
+                            maxBinanceSizeLimit = binanceSizeLimit;
+                        }
+                    }
+                }
+            });
+            
+            // 如果没有启用的阶梯，使用默认值
+            return maxBinanceSizeLimit > 0 ? maxBinanceSizeLimit : 1;
+        }
+
+        function startForwardArbitrageCloseStrategy() {
+            // 启动正向套利（做多Binance）平仓策略
+            console.log('启动正向套利（做多Binance）平仓策略');
+            
+            // 检查价格数据是否可用
+            if (!bybitPrice || !binancePrice || !bybitPrice.bid || !binancePrice.ask) {
+                showError('价格数据不可用，无法执行正向套利平仓策略');
+                return;
+            }
+            
+            // 获取账号对应总持仓数量
+            const totalPosition = getTotalPosition();
+            if (totalPosition <= 0) {
+                showInfo('账号无持仓，无需平仓');
+                return;
+            }
+            
+            // 执行条件1：标准平仓套利
+            executeForwardArbitrageClose(totalPosition);
+        }
+
+        function executeForwardArbitrageClose(positionSize) {
+            // 执行正向套利（做多Binance）平仓策略
+            
+            // 计算交易价格
+            // bybit买入价格：买价(Bid)位 + 0.01
+            const bybitBuyPrice = bybitPrice.bid + 0.01;
+            // binance卖出价格：卖价(Ask)位 - 0.01
+            const binanceSellPrice = binancePrice.ask - 0.01;
+            
+            // 执行平仓交易
+            console.log('执行正向套利（做多Binance）平仓交易:', {
+                bybitBuyPrice: bybitBuyPrice,
+                binanceSellPrice: binanceSellPrice,
+                positionSize: positionSize
+            });
+            
+            // 模拟交易执行
+            const bybitResult = simulateTrade('bybit', 'buy', bybitBuyPrice, positionSize / 100);
+            const binanceResult = simulateTrade('binance', 'sell', binanceSellPrice, positionSize);
+            
+            // 检查是否双边成交
+            checkForwardTradeCompletion(bybitResult, binanceResult, positionSize);
+        }
+
+        function checkForwardTradeCompletion(bybitResult, binanceResult, positionSize) {
+            // 检查交易是否完成
+            // 这里应该根据实际的交易结果进行判断
+            // 暂时使用模拟结果，实际应用中应该根据API返回结果判断
+            
+            const bybitFilled = bybitResult && bybitResult.filled;
+            const binanceFilled = binanceResult && binanceResult.filled;
+            
+            if (bybitFilled && binanceFilled) {
+                // 双边成交，平仓完成
+                showSuccess('正向套利（做多Binance）平仓交易已完成');
+                return;
+            } else if (bybitFilled || binanceFilled) {
+                // 单边成交，执行条件2：3秒后撤单追单
+                showInfo('检测到单边成交，3秒后执行追单策略');
+                
+                setTimeout(() => {
+                    // 撤单
+                    cancelOrders();
+                    // 立即挂单进行追单，采用优先级吃单
+                    executeForwardChaseOrder(positionSize);
+                }, 3000);
+            } else {
+                // 两边都未成交，直接执行追单
+                executeForwardChaseOrder(positionSize);
+            }
+        }
+
+        function executeForwardChaseOrder(positionSize) {
+            // 执行正向套利（做多Binance）追单策略
+            console.log('执行正向套利（做多Binance）追单策略:', {
+                positionSize: positionSize
+            });
+            
+            // 计算交易价格（优先级吃单）
+            // bybit买入价格：当前买价(Bid)位 + 0.02（更高价格确保成交）
+            const bybitBuyPrice = bybitPrice.bid + 0.02;
+            // binance卖出价格：当前卖价(Ask)位 - 0.02（更低价格确保成交）
+            const binanceSellPrice = binancePrice.ask - 0.02;
+            
+            // 模拟交易执行
+            const bybitResult = simulateTrade('bybit', 'buy', bybitBuyPrice, positionSize / 100);
+            const binanceResult = simulateTrade('binance', 'sell', binanceSellPrice, positionSize);
+            
+            // 3秒后检测是否完成
+            setTimeout(() => {
+                checkForwardChaseOrderCompletion(bybitResult, binanceResult, positionSize);
+            }, 3000);
+        }
+
+        function checkForwardChaseOrderCompletion(bybitResult, binanceResult, positionSize) {
+            // 检查追单是否完成
+            
+            const bybitFilled = bybitResult && bybitResult.filled;
+            const binanceFilled = binanceResult && binanceResult.filled;
+            
+            if (bybitFilled && binanceFilled) {
+                // 双边成交，平仓完成
+                showSuccess('正向套利（做多Binance）追单交易已完成');
+                return;
+            } else {
+                // 仍未完成，继续追单
+                showInfo('追单未完成，继续执行追单策略');
+                executeForwardChaseOrder(positionSize);
+            }
+        }
+
+        function saveForwardGridStrategy() {
+            // 检查账户连接状态
+            const bybitHeartbeat = document.getElementById('bybitHeartbeat');
+            const binanceHeartbeat = document.getElementById('binanceHeartbeat');
+            
+            if (!bybitHeartbeat || !binanceHeartbeat) {
+                showError('无法获取账户连接状态');
+                return;
+            }
+            
+            const bybitConnected = bybitHeartbeat.textContent === '已连接';
+            const binanceConnected = binanceHeartbeat.textContent === '已连接';
+            
+            if (!bybitConnected || !binanceConnected) {
+                showError('平台账户未连接，无法保存正向套利策略');
+                return;
+            }
+
+            const container = document.getElementById('forwardGridStrategyContainer');
+            const layers = container.querySelectorAll('.grid-strategy-layer');
+            const strategy = [];
+
+            // 验证M币设置一次下单数量
+            const mCoinOrderSize = parseInt(document.getElementById('forwardMCoinOrderSize').value);
+            if (isNaN(mCoinOrderSize) || mCoinOrderSize < 1) {
+                showError('M币设置一次下单数量必须为正整数');
+                return;
+            }
+
+            let valid = true;
+
+            layers.forEach(layer => {
+                const enable = layer.querySelector('.layer-enable').checked;
+                const openPrice = parseFloat(layer.querySelector('.grid-open-price').value);
+                const spread = parseFloat(layer.querySelector('.grid-spread').value);
+                const sizeLimit = parseInt(layer.querySelector('.grid-size-limit').value);
+
+                // 验证输入值
+                if (enable) {
+                    if (isNaN(openPrice) || openPrice < 0) {
+                        showError(`阶梯 ${layer.dataset.layer} 的开仓价必须为非负数`);
+                        valid = false;
+                    }
+                    if (isNaN(spread) || spread < 0) {
+                        showError(`阶梯 ${layer.dataset.layer} 的阈值必须为非负数`);
+                        valid = false;
+                    }
+                    if (isNaN(sizeLimit) || sizeLimit < 1) {
+                        showError(`阶梯 ${layer.dataset.layer} 的下单数量限制必须为正整数`);
+                        valid = false;
+                    }
+                }
+
+                if (enable && valid) {
+                    const binanceSizeLimit = sizeLimit;
+                    const bybitSizeLimit = binanceSizeLimit / 100; // bybit下单数量限制为binance的1/100
+                    
+                    strategy.push({
+                        layer: layer.dataset.layer,
+                        open_price: openPrice,
+                        spread: spread,
+                        binance_size_limit: binanceSizeLimit,
+                        bybit_size_limit: bybitSizeLimit,
+                        strategy_type: 'forward_arbitrage_binance' // 明确指定为正向套利（做多Binance）策略
+                    });
+                }
+            });
+
+            if (!valid) {
+                return;
+            }
+
+            // 保存策略到数据库
+            const strategyData = {
+                strategy: strategy,
+                mcoin_order_size: mCoinOrderSize,
+                open_sync: parseInt(document.getElementById('forwardOpenSyncInput').value) || 1,
+                close_sync: parseInt(document.getElementById('forwardCloseSyncInput').value) || 1
+            };
+
+            // 发送到服务器保存
+            fetch('/api/strategy/save-grid', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(strategyData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('保存正向套利（做多Binance）阶梯策略成功:', data.data);
+                    showSuccess('正向套利（做多Binance）阶梯策略已保存到数据库');
+                } else {
+                    console.error('保存正向套利（做多Binance）阶梯策略失败:', data.message);
+                    showError('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存正向套利（做多Binance）阶梯策略出错:', error);
+                showError('保存出错: ' + error.message);
+            });
+        }
+
+        function saveSyncSettings() {
+            const openSyncValue = parseInt(document.getElementById('openSyncInput').value) || 1;
+            const closeSyncValue = parseInt(document.getElementById('closeSyncInput').value) || 1;
+            
+            // 发送到服务器保存
+            fetch('/api/sync/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    open_sync: openSyncValue,
+                    close_sync: closeSyncValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('保存同步设置成功:', data.data);
+                    showSuccess('同步设置已保存到数据库');
+                } else {
+                    console.error('保存同步设置失败:', data.message);
+                    showError('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存同步设置出错:', error);
+                showError('保存出错: ' + error.message);
+            });
+        }
+
+        function saveForwardSyncSettings() {
+            const openSyncValue = parseInt(document.getElementById('forwardOpenSyncInput').value) || 1;
+            const closeSyncValue = parseInt(document.getElementById('forwardCloseSyncInput').value) || 1;
+            
+            // 发送到服务器保存
+            fetch('/api/sync/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    open_sync: openSyncValue,
+                    close_sync: closeSyncValue,
+                    strategy_type: 'forward_arbitrage_binance'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('保存正向套利同步设置成功:', data.data);
+                    showSuccess('同步设置已保存到数据库');
+                } else {
+                    console.error('保存正向套利同步设置失败:', data.message);
+                    showError('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存正向套利同步设置出错:', error);
+                showError('保存出错: ' + error.message);
+            });
+        }
+
+        function toggleForwardMcoinOpen() {
+            // 检查账户连接状态
+            const bybitHeartbeat = document.getElementById('bybitHeartbeat');
+            const binanceHeartbeat = document.getElementById('binanceHeartbeat');
+            
+            if (!bybitHeartbeat || !binanceHeartbeat) {
+                showError('无法获取账户连接状态');
+                return;
+            }
+            
+            const bybitConnected = bybitHeartbeat.textContent === '已连接';
+            const binanceConnected = binanceHeartbeat.textContent === '已连接';
+            
+            if (!bybitConnected || !binanceConnected) {
+                showError('平台账户未连接，无法启用正向套利算法');
+                return;
+            }
+            
+            forwardMcoinOpenEnabled = !forwardMcoinOpenEnabled;
+            const btn = document.getElementById('forwardMCoinOpenBtn');
+            if (forwardMcoinOpenEnabled) {
+                btn.textContent = '停用开仓';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                showSuccess('M币开仓已启用');
+                
+                // 启动正向套利（做多Binance）算法
+                startForwardArbitrageAlgorithm();
+            } else {
+                btn.textContent = '启用开仓';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-success');
+                showSuccess('M币开仓已停用');
+            }
+        }
+
+        function toggleForwardMcoinClose() {
+            forwardMcoinCloseEnabled = !forwardMcoinCloseEnabled;
+            const btn = document.getElementById('forwardMCoinCloseBtn');
+            if (forwardMcoinCloseEnabled) {
+                btn.textContent = '停用平仓';
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-warning');
+                showSuccess('M币平仓已启用');
+                
+                // 启动正向套利（做多Binance）平仓策略
+                startForwardArbitrageCloseStrategy();
+            } else {
+                btn.textContent = '启用平仓';
+                btn.classList.remove('btn-warning');
+                btn.classList.add('btn-danger');
+                showSuccess('M币平仓已停用');
+            }
+        }
+
+        function startForwardArbitrageAlgorithm() {
+            // 获取一次下单数量
+            const orderSize = parseInt(document.getElementById('forwardMCoinOrderSize').value) || 0;
+            // 获取开仓数据同步数量
+            const openSyncCount = parseInt(document.getElementById('forwardOpenSyncInput').value) || 1;
+            // 获取平仓数据同步数量
+            const closeSyncCount = parseInt(document.getElementById('forwardCloseSyncInput').value) || 1;
+            
+            // 获取阶梯策略条件
+            const gridLayers = document.querySelectorAll('#forwardGridStrategyContainer .grid-strategy-layer');
+            const strategyConditions = [];
+            
+            gridLayers.forEach(layer => {
+                const enableCheckbox = layer.querySelector('.layer-enable');
+                if (enableCheckbox && enableCheckbox.checked) {
+                    const spreadInput = layer.querySelector('.grid-spread');
+                    const sizeLimitInput = layer.querySelector('.grid-size-limit');
+                    
+                    if (spreadInput && sizeLimitInput) {
+                        const binanceSizeLimit = parseInt(sizeLimitInput.value) || 1;
+                        const bybitSizeLimit = binanceSizeLimit / 100; // bybit下单数量限制为binance的1/100
+                        
+                        strategyConditions.push({
+                            spread: parseFloat(spreadInput.value) || 0,
+                            binanceSizeLimit: binanceSizeLimit,
+                            bybitSizeLimit: bybitSizeLimit,
+                            layer: parseInt(layer.dataset.layer) || 1
+                        });
+                    }
+                }
+            });
+            
+            // 启动正向套利（做多Binance）算法
+            console.log('启动正向套利（做多Binance）算法:', {
+                orderSize: orderSize,
+                openSyncCount: openSyncCount,
+                closeSyncCount: closeSyncCount,
+                strategyConditions: strategyConditions,
+                strategyType: 'forward_arbitrage_binance' // 明确指定为正向套利（做多Binance）策略
+            });
+            
+            // 执行正向套利交易逻辑
+            executeForwardArbitrage(orderSize, strategyConditions);
+            
+            showSuccess(`正向套利（做多Binance）算法已启动，下单数量: ${orderSize || '根据阶梯策略'}，开仓数据同步数量: ${openSyncCount}，平仓数据同步数量: ${closeSyncCount}`);
+        }
+
+        function executeForwardArbitrage(orderSize, strategyConditions) {
+            // 检查价格数据是否可用
+            if (!bybitPrice || !binancePrice || !bybitPrice.ask || !binancePrice.bid) {
+                showError('价格数据不可用，无法执行正向套利交易');
+                return;
+            }
+            
+            // 计算交易价格
+            // binance买入价格：买价(Bid)位 + 0.01
+            const binanceBuyPrice = binancePrice.bid + 0.01;
+            // bybit卖出价格：卖价(Ask)位 - 0.01
+            const bybitSellPrice = bybitPrice.ask - 0.01;
+            
+            // 计算点差
+            const spread = bybitPrice.ask - binancePrice.bid;
+            
+            // 检查是否符合阶梯策略条件
+            const validConditions = strategyConditions.filter(condition => spread >= condition.spread);
+            
+            if (validConditions.length === 0) {
+                showInfo('当前点差不符合任何阶梯策略条件，无法执行正向套利交易');
+                return;
+            }
+            
+            // 确定交易数量
+            let tradeSize;
+            if (orderSize > 0) {
+                // 使用用户指定的下单数量
+                tradeSize = orderSize;
+            } else {
+                // 根据阶梯策略条件确定交易数量
+                // 取第一个符合条件的阶梯的binanceSizeLimit
+                tradeSize = validConditions[0].binanceSizeLimit;
+            }
+            
+            // 计算bybit交易数量（binance的1/100）
+            const bybitTradeSize = tradeSize / 100;
+            
+            // 执行交易
+            console.log('执行正向套利（做多Binance）交易:', {
+                binanceBuyPrice: binanceBuyPrice,
+                bybitSellPrice: bybitSellPrice,
+                binanceTradeSize: tradeSize,
+                bybitTradeSize: bybitTradeSize,
+                spread: spread,
+                validConditions: validConditions
+            });
+            
+            // 这里应该调用API执行实际的交易
+            // 暂时使用模拟交易，实际应用中应该调用API
+            simulateTrade('binance', 'buy', binanceBuyPrice, tradeSize);
+            simulateTrade('bybit', 'sell', bybitSellPrice, bybitTradeSize);
+            
+            // 保存交易记录
+            saveTradeRecord({
+                type: 'forward_arbitrage',
+                binancePrice: binanceBuyPrice,
+                bybitPrice: bybitSellPrice,
+                binanceSize: tradeSize,
+                bybitSize: bybitTradeSize,
+                spread: spread,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function validateIntegerInput(input) {
+            // 确保输入值为整数
+            let value = input.value;
+            // 移除非数字字符
+            value = value.replace(/[^0-9]/g, '');
+            // 如果值为空，设置为1
+            if (value === '') {
+                value = '1';
+            }
+            // 确保值不小于最小值
+            const min = parseInt(input.min) || 1;
+            value = Math.max(parseInt(value) || min, min).toString();
+            input.value = value;
+        }
+
+        function restrictToNumbers(event) {
+            // 限制只能输入数字、退格键、删除键、方向键等
+            const allowedKeys = [
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'
+            ];
+            
+            if (!allowedKeys.includes(event.key)) {
+                event.preventDefault();
+            }
+        }
+
+        function toggleAlgorithmSection(element) {
+            const section = element.closest('.algorithm-section');
+            section.classList.toggle('collapsed');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add click event listeners to algorithm section headers
+            const algorithmHeaders = document.querySelectorAll('.algorithm-section h4');
+            algorithmHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    toggleAlgorithmSection(this);
+                });
+            });
+        });
+
+        function collapseAllAlgorithmSections() {
+            const sections = document.querySelectorAll('.algorithm-section');
+            sections.forEach(section => {
+                section.classList.add('collapsed');
+            });
+        }
+
+        function expandAllAlgorithmSections() {
+            const sections = document.querySelectorAll('.algorithm-section');
+            sections.forEach(section => {
+                section.classList.remove('collapsed');
+            });
+        }
+
+        async function loadHistoryData() {
+            try {
+                const response = await fetch('/api/history/limit');
+                const result = await response.json();
+
+                if (result.success) {
+                    const tbody = document.getElementById('historyDataTableBody');
+                    tbody.innerHTML = '';
+
+                    if (result.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无限价历史记录</td></tr>';
+                        updateStats([]);
+                        return;
+                    }
+
+                    result.data.forEach(trade => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${new Date(trade.time * 1000).toLocaleString()}</td>
+                            <td>${trade.symbol}</td>
+                            <td>${trade.price}</td>
+                            <td>${trade.volume}</td>
+                            <td>${trade.type}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    updateStats(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load history data:', error);
+            }
+        }
+
+        async function applyHistoryFilter() {
+            try {
+                const response = await fetch('/api/history/limit');
+                const result = await response.json();
+
+                if (result.success) {
+                    const tbody = document.getElementById('historyDataTableBody');
+                    tbody.innerHTML = '';
+
+                    let filteredData = result.data;
+
+                    const startTime = document.getElementById('filterStartTime').value;
+                    const endTime = document.getElementById('filterEndTime').value;
+                    const tradeType = document.getElementById('filterTradeType').value;
+
+                    if (startTime) {
+                        const startTimestamp = new Date(startTime).getTime() / 1000;
+                        filteredData = filteredData.filter(trade => trade.time >= startTimestamp);
+                    }
+
+                    if (endTime) {
+                        const endTimestamp = new Date(endTime).getTime() / 1000;
+                        filteredData = filteredData.filter(trade => trade.time <= endTimestamp);
+                    }
+
+                    if (tradeType !== 'all') {
+                        filteredData = filteredData.filter(trade => {
+                            const type = trade.type.toLowerCase();
+                            if (tradeType === 'buy') {
+                                return type.includes('buy') || type.includes('买入');
+                            } else if (tradeType === 'sell') {
+                                return type.includes('sell') || type.includes('卖出');
+                            }
+                            return true;
+                        });
+                    }
+
+                    if (filteredData.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">暂无符合条件的记录</td></tr>';
+                        updateStats([]);
+                        return;
+                    }
+
+                    filteredData.forEach(trade => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${new Date(trade.time * 1000).toLocaleString()}</td>
+                            <td>${trade.symbol}</td>
+                            <td>${trade.price}</td>
+                            <td>${trade.volume}</td>
+                            <td>${trade.type}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    updateStats(filteredData);
+                    showSuccess(`查询成功，共找到 ${filteredData.length} 条记录`);
+                }
+            } catch (error) {
+                console.error('Failed to apply filter:', error);
+                showError('查询失败: ' + error.message);
+            }
+        }
+
+        function updateStats(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('statTotalTrades').textContent = '0';
+                document.getElementById('statTotalVolume').textContent = '0';
+                document.getElementById('statAvgPrice').textContent = '--';
+                document.getElementById('statBuyCount').textContent = '0';
+                document.getElementById('statSellCount').textContent = '0';
+                return;
+            }
+
+            const totalTrades = data.length;
+            const totalVolume = data.reduce((sum, trade) => sum + (trade.volume || 0), 0);
+            const avgPrice = data.reduce((sum, trade) => sum + (trade.price || 0), 0) / data.length;
+
+            let buyCount = 0;
+            let sellCount = 0;
+            data.forEach(trade => {
+                const type = trade.type.toLowerCase();
+                if (type.includes('buy') || type.includes('买入')) {
+                    buyCount++;
+                } else if (type.includes('sell') || type.includes('卖出')) {
+                    sellCount++;
+                }
+            });
+
+            document.getElementById('statTotalTrades').textContent = totalTrades;
+            document.getElementById('statTotalVolume').textContent = totalVolume.toFixed(2);
+            document.getElementById('statAvgPrice').textContent = avgPrice.toFixed(2);
+            document.getElementById('statBuyCount').textContent = buyCount;
+            document.getElementById('statSellCount').textContent = sellCount;
+        }
+
+        function resetHistoryFilter() {
+            document.getElementById('filterStartTime').value = '';
+            document.getElementById('filterEndTime').value = '';
+            document.getElementById('filterTradeType').value = 'all';
+            loadHistoryData();
+            showSuccess('筛选条件已重置');
+        }
+
+        function switchHistoryTab(tabName) {
+            // 切换标签状态
+            document.querySelectorAll('.history-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 切换内容显示
+            if (tabName === 'limit') {
+                document.getElementById('limitHistoryContent').style.display = 'block';
+                document.getElementById('positionsHistoryContent').style.display = 'none';
+            } else if (tabName === 'positions') {
+                document.getElementById('limitHistoryContent').style.display = 'none';
+                document.getElementById('positionsHistoryContent').style.display = 'block';
+            }
         }
 
         async function submitAddAccount() {
@@ -2129,62 +4488,143 @@
                 return;
             }
 
+            // 显示加载状态
+            showSuccess('正在执行平仓操作...');
+
             try {
+                let hasOpenPositions = false;
+                let closeResults = [];
+
+                // 平仓 Bybit 多头持仓
                 if (strategy.status.bybit_position > 0) {
-                    await fetch('/api/arbitrage/manual-trade', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            account_id: strategy.bybit_account_id,
-                            direction: 'sell',
-                            price: bybitPrice ? bybitPrice.bid : 0,
-                            size: Math.abs(strategy.status.bybit_position)
-                        })
-                    });
+                    hasOpenPositions = true;
+                    const price = bybitPrice ? bybitPrice.bid : 0;
+                    const size = Math.abs(strategy.status.bybit_position);
+                    
+                    if (price > 0 && size > 0) {
+                        const response = await fetch('/api/arbitrage/manual-trade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                account_id: strategy.bybit_account_id,
+                                direction: 'sell',
+                                price: price,
+                                size: size
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        closeResults.push({
+                            account: 'Bybit',
+                            direction: '多头平仓',
+                            success: result.success,
+                            message: result.message
+                        });
+                    }
                 }
 
+                // 平仓 Binance 多头持仓
                 if (strategy.status.binance_position > 0) {
-                    await fetch('/api/arbitrage/manual-trade', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            account_id: strategy.binance_account_id,
-                            direction: 'sell',
-                            price: binancePrice ? binancePrice.bid : 0,
-                            size: Math.abs(strategy.status.binance_position)
-                        })
-                    });
+                    hasOpenPositions = true;
+                    const price = binancePrice ? binancePrice.bid : 0;
+                    const size = Math.abs(strategy.status.binance_position);
+                    
+                    if (price > 0 && size > 0) {
+                        const response = await fetch('/api/arbitrage/manual-trade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                account_id: strategy.binance_account_id,
+                                direction: 'sell',
+                                price: price,
+                                size: size
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        closeResults.push({
+                            account: 'Binance',
+                            direction: '多头平仓',
+                            success: result.success,
+                            message: result.message
+                        });
+                    }
                 }
 
+                // 平仓 Bybit 空头持仓
                 if (strategy.status.bybit_position < 0) {
-                    await fetch('/api/arbitrage/manual-trade', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            account_id: strategy.bybit_account_id,
-                            direction: 'buy',
-                            price: bybitPrice ? bybitPrice.ask : 0,
-                            size: Math.abs(strategy.status.bybit_position)
-                        })
-                    });
+                    hasOpenPositions = true;
+                    const price = bybitPrice ? bybitPrice.ask : 0;
+                    const size = Math.abs(strategy.status.bybit_position);
+                    
+                    if (price > 0 && size > 0) {
+                        const response = await fetch('/api/arbitrage/manual-trade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                account_id: strategy.bybit_account_id,
+                                direction: 'buy',
+                                price: price,
+                                size: size
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        closeResults.push({
+                            account: 'Bybit',
+                            direction: '空头平仓',
+                            success: result.success,
+                            message: result.message
+                        });
+                    }
                 }
 
+                // 平仓 Binance 空头持仓
                 if (strategy.status.binance_position < 0) {
-                    await fetch('/api/arbitrage/manual-trade', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            account_id: strategy.binance_account_id,
-                            direction: 'buy',
-                            price: binancePrice ? binancePrice.ask : 0,
-                            size: Math.abs(strategy.status.binance_position)
-                        })
-                    });
+                    hasOpenPositions = true;
+                    const price = binancePrice ? binancePrice.ask : 0;
+                    const size = Math.abs(strategy.status.binance_position);
+                    
+                    if (price > 0 && size > 0) {
+                        const response = await fetch('/api/arbitrage/manual-trade', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                account_id: strategy.binance_account_id,
+                                direction: 'buy',
+                                price: price,
+                                size: size
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        closeResults.push({
+                            account: 'Binance',
+                            direction: '空头平仓',
+                            success: result.success,
+                            message: result.message
+                        });
+                    }
                 }
 
-                showSuccess('平仓指令已发送');
+                if (!hasOpenPositions) {
+                    showError('当前没有需要平仓的持仓');
+                    return;
+                }
+
+                // 检查平仓结果
+                const failedResults = closeResults.filter(result => !result.success);
+                
+                if (failedResults.length > 0) {
+                    const errorMessages = failedResults.map(result => 
+                        `${result.account} ${result.direction}: ${result.message || '平仓失败'}`
+                    ).join('\n');
+                    showError('部分平仓失败:\n' + errorMessages);
+                } else {
+                    showSuccess('所有持仓已成功平仓');
+                }
             } catch (error) {
-                showError('平仓失败: ' + error.message);
+                showError('平仓操作失败: ' + error.message);
             }
         }
 

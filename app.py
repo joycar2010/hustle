@@ -31,6 +31,25 @@ strategy_lock = threading.Lock()
 trade_history = []
 trade_history_lock = threading.Lock()
 
+# 设置存储
+sync_settings_store = {}
+strategy_settings_store = {}
+settings_lock = threading.Lock()
+settings_file = "arbitrage_settings.json"
+
+# 加载设置
+try:
+    import json
+    with open(settings_file, 'r', encoding='utf-8') as f:
+        settings_data = json.load(f)
+        sync_settings_store = settings_data.get('sync_settings', {})
+        strategy_settings_store = settings_data.get('strategy_settings', {})
+    logger.info("Settings loaded from file")
+except FileNotFoundError:
+    logger.info("No settings file found, using defaults")
+except Exception as e:
+    logger.error(f"Error loading settings: {e}")
+
 
 @app.route('/test')
 def index():
@@ -297,8 +316,137 @@ def create_arbitrage_pair():
         }
         risk_manager.configure_default_rules(default_risk_config)
 
-    logger.info(f"Created arbitrage strategy: {strategy_id}")
-    return jsonify({"success": True, "strategy_id": strategy_id, "message": "Strategy created"})
+        logger.info(f"Created arbitrage strategy: {strategy_id}")
+        return jsonify({"success": True, "strategy_id": strategy_id, "message": "Strategy created"})
+
+
+@app.route('/api/sync/settings', methods=['POST'])
+def save_sync_settings():
+    """保存套利策略的开仓数据同步和平仓数据同步设置"""
+    data = request.get_json()
+    open_sync = data.get('open_sync')
+    close_sync = data.get('close_sync')
+    strategy_type = data.get('strategy_type', 'reverse_arbitrage_bybit')
+
+    if open_sync is None or close_sync is None:
+        return jsonify({"success": False, "message": "Missing required fields"})
+
+    try:
+        # 保存到内存存储
+        sync_settings = {
+            'open_sync': open_sync,
+            'close_sync': close_sync,
+            'strategy_type': strategy_type,
+            'updated_at': datetime.now().isoformat()
+        }
+
+        # 保存到文件
+        with settings_lock:
+            sync_settings_store[strategy_type] = sync_settings
+            # 保存到文件
+            import json
+            settings_data = {
+                'sync_settings': sync_settings_store,
+                'strategy_settings': strategy_settings_store
+            }
+            with open(settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings_data, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Saved sync settings: {sync_settings}")
+        return jsonify({"success": True, "message": "同步设置保存成功", "data": sync_settings})
+    except Exception as e:
+        logger.error(f"Error saving sync settings: {e}")
+        return jsonify({"success": False, "message": f"保存失败: {str(e)}"})
+
+
+@app.route('/api/strategy/save-grid', methods=['POST'])
+def save_grid_strategy():
+    """保存套利策略的阶梯策略设置"""
+    data = request.get_json()
+    strategy = data.get('strategy')
+    mcoin_order_size = data.get('mcoin_order_size')
+    open_sync = data.get('open_sync')
+    close_sync = data.get('close_sync')
+
+    if not strategy or mcoin_order_size is None:
+        return jsonify({"success": False, "message": "Missing required fields"})
+
+    try:
+        # 从策略中提取策略类型，如果没有则默认为反向套利
+        strategy_type = 'reverse_arbitrage_bybit'
+        if strategy and len(strategy) > 0:
+            strategy_type = strategy[0].get('strategy_type', 'reverse_arbitrage_bybit')
+
+        # 保存到内存存储
+        grid_strategy = {
+            'strategy': strategy,
+            'mcoin_order_size': mcoin_order_size,
+            'open_sync': open_sync or 1,
+            'close_sync': close_sync or 1,
+            'strategy_type': strategy_type,
+            'updated_at': datetime.now().isoformat()
+        }
+
+        # 保存到文件
+        with settings_lock:
+            strategy_settings_store[strategy_type] = grid_strategy
+            # 保存到文件
+            import json
+            settings_data = {
+                'sync_settings': sync_settings_store,
+                'strategy_settings': strategy_settings_store
+            }
+            with open(settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings_data, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Saved grid strategy: {grid_strategy}")
+        return jsonify({"success": True, "message": "阶梯策略保存成功", "data": grid_strategy})
+    except Exception as e:
+        logger.error(f"Error saving grid strategy: {e}")
+        return jsonify({"success": False, "message": f"保存失败: {str(e)}"})
+
+
+@app.route('/api/trade/save', methods=['POST'])
+def save_trade_record():
+    """保存反向套利（做多Bybit）的交易记录"""
+    data = request.get_json()
+    type_ = data.get('type')
+    binance_price = data.get('binancePrice')
+    bybit_price = data.get('bybitPrice')
+    binance_size = data.get('binanceSize')
+    bybit_size = data.get('bybitSize')
+    spread = data.get('spread')
+
+    if type_ is None or binance_price is None or bybit_price is None:
+        return jsonify({"success": False, "message": "Missing required fields"})
+
+    try:
+        # 这里应该保存到数据库
+        # 暂时使用内存存储作为示例
+        # 实际应用中应该保存到数据库
+        trade_record = {
+            'type': type_,
+            'binance_price': binance_price,
+            'bybit_price': bybit_price,
+            'binance_size': binance_size,
+            'bybit_size': bybit_size,
+            'spread': spread,
+            'timestamp': data.get('timestamp') or datetime.now().isoformat(),
+            'created_at': datetime.now().isoformat()
+        }
+
+        # 添加到内存中的trade_history
+        with trade_history_lock:
+            trade_history.append(trade_record)
+            # 限制历史记录数量
+            if len(trade_history) > 1000:
+                trade_history = trade_history[-1000:]
+
+        logger.info(f"Saved trade record: {trade_record}")
+        return jsonify({"success": True, "message": "交易记录保存成功", "data": trade_record})
+    except Exception as e:
+        logger.error(f"Error saving trade record: {e}")
+        return jsonify({"success": False, "message": f"保存失败: {str(e)}"})
 
 
 @app.route('/api/arbitrage/start', methods=['POST'])
@@ -717,6 +865,48 @@ def backup_config():
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/api/sync/settings', methods=['GET'])
+def get_sync_settings():
+    """获取套利策略的同步设置"""
+    strategy_type = request.args.get('strategy_type', 'reverse_arbitrage_bybit')
+
+    try:
+        with settings_lock:
+            settings = sync_settings_store.get(strategy_type, {
+                'open_sync': 1,
+                'close_sync': 1,
+                'strategy_type': strategy_type,
+                'updated_at': datetime.now().isoformat()
+            })
+
+        return jsonify({"success": True, "data": settings})
+    except Exception as e:
+        logger.error(f"Error getting sync settings: {e}")
+        return jsonify({"success": False, "message": f"获取失败: {str(e)}"})
+
+
+@app.route('/api/strategy/settings', methods=['GET'])
+def get_strategy_settings():
+    """获取套利策略的阶梯策略设置"""
+    strategy_type = request.args.get('strategy_type', 'reverse_arbitrage_bybit')
+
+    try:
+        with settings_lock:
+            settings = strategy_settings_store.get(strategy_type, {
+                'strategy': [],
+                'mcoin_order_size': 1,
+                'open_sync': 1,
+                'close_sync': 1,
+                'strategy_type': strategy_type,
+                'updated_at': datetime.now().isoformat()
+            })
+
+        return jsonify({"success": True, "data": settings})
+    except Exception as e:
+        logger.error(f"Error getting strategy settings: {e}")
+        return jsonify({"success": False, "message": f"获取失败: {str(e)}"})
+
+
 @app.route('/api/accounts/<account_id>/disconnect', methods=['POST'])
 def disconnect_account(account_id):
     global gateway, binance_gateway
@@ -833,7 +1023,7 @@ def reset_risk_counters():
     })
 
 
-def execute_order(account_id: str, direction: str, price: float, size: float, order_id: str = None) -> str:
+def execute_order(account_id: str, direction: str, price: float, size: float, order_id: str = None, strategy_type: str = 'reverse_arbitrage_bybit') -> str:
     result_order_id = None
     
     if account_id.startswith('bybit') and gateway:
@@ -846,6 +1036,17 @@ def execute_order(account_id: str, direction: str, price: float, size: float, or
                 'order_id': result_order_id,
                 'status': 'filled'
             })
+            # 广播订单更新
+            socketio.emit('order_update', {
+                "strategy_type": strategy_type,
+                "orders": [{
+                    "symbol": "XAU/USD" if account_id.startswith('bybit') else "XAUUSDT",
+                    "side": direction,
+                    "price": price,
+                    "quantity": size,
+                    "timestamp": datetime.now().isoformat()
+                }]
+            })
     elif account_id.startswith('binance') and binance_gateway:
         result_order_id = binance_gateway.send_order(direction, price, size, order_id)
         if result_order_id:
@@ -855,6 +1056,17 @@ def execute_order(account_id: str, direction: str, price: float, size: float, or
                 'size': size,
                 'order_id': result_order_id,
                 'status': 'filled'
+            })
+            # 广播订单更新
+            socketio.emit('order_update', {
+                "strategy_type": strategy_type,
+                "orders": [{
+                    "symbol": "XAUUSDT" if account_id.startswith('binance') else "XAU/USD",
+                    "side": direction,
+                    "price": price,
+                    "quantity": size,
+                    "timestamp": datetime.now().isoformat()
+                }]
             })
     
     return result_order_id
@@ -896,6 +1108,48 @@ def broadcast_binance_price(tick):
         strategy.update_tick('binance', tick)
 
 
+def broadcast_margin_status():
+    """广播保证金状态"""
+    # 模拟Binance保证金数据
+    binance_margin_data = {
+        "platform": "binance",
+        "equity": 10000.0,
+        "maintenance_margin": 1000.0,
+        "used_margin": 500.0,
+        "free_margin": 9500.0
+    }
+    
+    # 模拟Bybit保证金数据
+    bybit_margin_data = {
+        "platform": "bybit",
+        "equity": 15000.0,
+        "maintenance_margin": 750.0,
+        "used_margin": 300.0,
+        "free_margin": 14700.0
+    }
+    
+    socketio.emit('margin_status_update', binance_margin_data)
+    socketio.emit('margin_status_update', bybit_margin_data)
+
+
+def start_margin_status_broadcast():
+    """启动保证金状态广播线程"""
+    def broadcast_loop():
+        while True:
+            try:
+                broadcast_margin_status()
+                time.sleep(5)  # 每5秒广播一次
+            except Exception as e:
+                logger.error(f"Error broadcasting margin status: {e}")
+                time.sleep(5)
+    
+    thread = threading.Thread(target=broadcast_loop, daemon=True)
+    thread.start()
+    logger.info("Margin status broadcast thread started")
+
+
 if __name__ == '__main__':
     logger.info(f"Starting web server on {WEBSERVER_CONFIG['host']}:{WEBSERVER_CONFIG['port']}")
+    # 启动保证金状态广播
+    start_margin_status_broadcast()
     socketio.run(app, host=WEBSERVER_CONFIG['host'], port=WEBSERVER_CONFIG['port'], debug=WEBSERVER_CONFIG['debug'])

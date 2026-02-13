@@ -1,0 +1,17 @@
+{
+  "sync_settings": {
+    "reverse_arbitrage_bybit": {
+      "open_sync": 5,
+      "close_sync": 5,
+      "strategy_type": "reverse_arbitrage_bybit",
+      "updated_at": "2026-02-14T00:35:56.430918"
+    },
+    "forward_arbitrage_binance": {
+      "open_sync": 3,
+      "close_sync": 3,
+      "strategy_type": "forward_arbitrage_binance",
+      "updated_at": "2026-02-14T00:36:07.075079"
+    }
+  },
+  "strategy_settings": {}
+}
