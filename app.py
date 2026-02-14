@@ -34,6 +34,7 @@ trade_history_lock = threading.Lock()
 # 设置存储
 sync_settings_store = {}
 strategy_settings_store = {}
+alert_settings_store = {}
 settings_lock = threading.Lock()
 settings_file = "arbitrage_settings.json"
 
@@ -44,6 +45,7 @@ try:
         settings_data = json.load(f)
         sync_settings_store = settings_data.get('sync_settings', {})
         strategy_settings_store = settings_data.get('strategy_settings', {})
+        alert_settings_store = settings_data.get('alert_settings', {})
     logger.info("Settings loaded from file")
 except FileNotFoundError:
     logger.info("No settings file found, using defaults")
@@ -347,7 +349,8 @@ def save_sync_settings():
             import json
             settings_data = {
                 'sync_settings': sync_settings_store,
-                'strategy_settings': strategy_settings_store
+                'strategy_settings': strategy_settings_store,
+                'alert_settings': alert_settings_store
             }
             with open(settings_file, 'w', encoding='utf-8') as f:
                 json.dump(settings_data, f, indent=2, ensure_ascii=False)
@@ -394,7 +397,8 @@ def save_grid_strategy():
             import json
             settings_data = {
                 'sync_settings': sync_settings_store,
-                'strategy_settings': strategy_settings_store
+                'strategy_settings': strategy_settings_store,
+                'alert_settings': alert_settings_store
             }
             with open(settings_file, 'w', encoding='utf-8') as f:
                 json.dump(settings_data, f, indent=2, ensure_ascii=False)
@@ -1023,6 +1027,42 @@ def reset_risk_counters():
     })
 
 
+@app.route('/api/alert/settings', methods=['GET'])
+def get_alert_settings():
+    """获取提醒设置"""
+    try:
+        with settings_lock:
+            return jsonify({"success": True, "data": alert_settings_store})
+    except Exception as e:
+        logger.error(f"Error getting alert settings: {e}")
+        return jsonify({"success": False, "message": f"获取失败: {str(e)}"})
+
+
+@app.route('/api/alert/settings', methods=['POST'])
+def save_alert_settings():
+    """保存提醒设置"""
+    try:
+        data = request.get_json()
+        
+        with settings_lock:
+            alert_settings_store.update(data)
+            # 保存到文件
+            import json
+            settings_data = {
+                'sync_settings': sync_settings_store,
+                'strategy_settings': strategy_settings_store,
+                'alert_settings': alert_settings_store
+            }
+            with open(settings_file, 'w', encoding='utf-8') as f:
+                json.dump(settings_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Alert settings saved: {data}")
+        return jsonify({"success": True, "message": "保存成功", "data": alert_settings_store})
+    except Exception as e:
+        logger.error(f"Error saving alert settings: {e}")
+        return jsonify({"success": False, "message": f"保存失败: {str(e)}"})
+
+
 def execute_order(account_id: str, direction: str, price: float, size: float, order_id: str = None, strategy_type: str = 'reverse_arbitrage_bybit') -> str:
     result_order_id = None
     
@@ -1146,6 +1186,88 @@ def start_margin_status_broadcast():
     thread = threading.Thread(target=broadcast_loop, daemon=True)
     thread.start()
     logger.info("Margin status broadcast thread started")
+
+
+@app.route('/api/history/account')
+def get_account_history():
+    try:
+        date = request.args.get('date', time.strftime('%Y-%m-%d'))
+        merge = request.args.get('merge', 'false').lower() == 'true'
+        
+        # 模拟账户成交历史数据
+        mock_data = [
+            {
+                "time": int(time.time()),
+                "symbol": "XAUUSDT",
+                "price": 5000.25,
+                "volume": 0.01,
+                "type": "buy",
+                "fee": 0.025,
+                "rebate": 0.01
+            },
+            {
+                "time": int(time.time()) - 1800,
+                "symbol": "XAUUSDT",
+                "price": 4998.75,
+                "volume": 0.01,
+                "type": "sell",
+                "fee": 0.025,
+                "rebate": 0.01
+            }
+        ]
+        
+        return jsonify({"success": True, "data": mock_data})
+    except Exception as e:
+        logger.error(f"Error getting account history: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/history/mt5')
+def get_mt5_history():
+    try:
+        date = request.args.get('date', time.strftime('%Y-%m-%d'))
+        merge = request.args.get('merge', 'false').lower() == 'true'
+        
+        # 模拟MT5成交历史数据
+        mock_data = [
+            {
+                "time": int(time.time()),
+                "symbol": "XAUUSD.s",
+                "price": 5002.50,
+                "volume": 0.01,
+                "type": "buy",
+                "fee": 0.03,
+                "rebate": 0.012
+            },
+            {
+                "time": int(time.time()) - 3600,
+                "symbol": "XAUUSD.s",
+                "price": 4999.80,
+                "volume": 0.01,
+                "type": "sell",
+                "fee": 0.03,
+                "rebate": 0.012
+            }
+        ]
+        
+        return jsonify({"success": True, "data": mock_data})
+    except Exception as e:
+        logger.error(f"Error getting MT5 history: {e}")
+        return jsonify({"success": False, "message": str(e)})
+
+
+@app.route('/api/history/delete-all', methods=['POST'])
+def delete_all_history():
+    try:
+        with trade_history_lock:
+            # 清空交易历史
+            trade_history.clear()
+            logger.info("All trade history deleted")
+        
+        return jsonify({"success": True, "message": "删除所有历史数据成功"})
+    except Exception as e:
+        logger.error(f"Error deleting all history: {e}")
+        return jsonify({"success": False, "message": str(e)})
 
 
 if __name__ == '__main__':

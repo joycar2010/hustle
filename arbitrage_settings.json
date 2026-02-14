@@ -13,5 +13,23 @@
       "updated_at": "2026-02-14T00:36:07.075079"
     }
   },
-  "strategy_settings": {}
+  "strategy_settings": {},
+  "alert_settings": {
+    "binanceEquityAlert": 0,
+    "bybitEquityAlert": 0,
+    "totalAssetAlert": 0,
+    "binanceLiquidationAlert": 0,
+    "bybitLiquidationAlert": 0,
+    "reverseOpenPriceAlert": 0,
+    "reverseOpenSyncCount": 1,
+    "reverseClosePriceAlert": 0,
+    "reverseCloseSyncCount": 1,
+    "forwardOpenPriceAlert": 0,
+    "forwardOpenSyncCount": 1,
+    "forwardClosePriceAlert": 0,
+    "forwardCloseSyncCount": 1,
+    "telegramBotToken": "",
+    "telegramChatId": "+8613957717158",
+    "enableTelegramAlert": true
+  }
 }
