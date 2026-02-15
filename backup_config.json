@@ -1,9 +1,9 @@
 {
-  "frequency": "daily",
-  "time": "10:00",
+  "frequency": "hourly",
+  "time": "12:00",
   "branch": "master",
   "commitTemplate": "自动备份: {datetime}",
   "includeConfig": true,
   "autoPush": true,
-  "sendNotification": true
+  "sendNotification": false
 }

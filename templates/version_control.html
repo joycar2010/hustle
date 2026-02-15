@@ -388,6 +388,10 @@
 
             <div class="card">
                 <div class="card-header">快速操作</div>
+                <div class="config-group" style="margin-bottom: 15px;">
+                    <label>备份备注</label>
+                    <input type="text" id="backupNote" placeholder="请输入备份备注（可选）">
+                </div>
                 <div class="actions">
                     <button class="btn btn-primary" onclick="manualBackup()">立即备份</button>
                     <button class="btn btn-success" onclick="checkStatus()">检查状态</button>
@@ -496,11 +500,11 @@
                 reconnectionAttempts: 5
             });
 
-            socket.on('connect', () => {
+            socket.on('connect', async () => {
                 console.log('Connected to server');
                 checkStatus();
                 loadVersionHistory();
-                loadBackupConfig();
+                await loadBackupConfig();
             });
 
             socket.on('disconnect', () => {
@@ -560,13 +564,19 @@
             showSuccess('开始手动备份...');
 
             try {
+                const backupNote = document.getElementById('backupNote').value;
+                let message = '手动备份: ' + new Date().toLocaleString();
+                if (backupNote) {
+                    message += ' - ' + backupNote;
+                }
+
                 const response = await fetch('/api/backup/run', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: '手动备份: ' + new Date().toLocaleString(),
+                        message: message,
                         includeConfig: true,
                         autoPush: true
                     })
@@ -576,6 +586,8 @@
 
                 if (result.success) {
                     showSuccess('备份成功: ' + result.message);
+                    // 清空备注输入框
+                    document.getElementById('backupNote').value = '';
                     checkStatus();
                     loadVersionHistory();
                 } else {
@@ -677,7 +689,22 @@
             }
         }
 
-        function loadBackupConfig() {
+        async function loadBackupConfig() {
+            try {
+                const response = await fetch('/api/backup/config', {
+                    method: 'GET'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 使用后端返回的配置
+                    backupConfig = result.config || backupConfig;
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+            
+            // 更新表单
             document.getElementById('backupFrequency').value = backupConfig.frequency;
             document.getElementById('backupTime').value = backupConfig.time;
             document.getElementById('branchName').value = backupConfig.branch;

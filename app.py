@@ -860,19 +860,39 @@ def backup_rollback():
         return jsonify({"success": False, "message": str(e)})
 
 
-@app.route('/api/backup/config', methods=['POST'])
+@app.route('/api/backup/config', methods=['GET', 'POST'])
 def backup_config():
     try:
-        data = request.get_json()
-        
-        # 保存配置到文件
-        import json
-        with open('backup_config.json', 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        
-        return jsonify({"success": True, "message": "Backup config saved"})
+        if request.method == 'POST':
+            data = request.get_json()
+            
+            # 保存配置到文件
+            import json
+            with open('backup_config.json', 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            
+            return jsonify({"success": True, "message": "Backup config saved"})
+        else:
+            # 获取配置
+            import json
+            try:
+                with open('backup_config.json', 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                return jsonify({"success": True, "config": config})
+            except FileNotFoundError:
+                # 返回默认配置
+                default_config = {
+                    "frequency": "daily",
+                    "time": "00:00",
+                    "branch": "master",
+                    "commitTemplate": "自动备份: {datetime}",
+                    "includeConfig": True,
+                    "autoPush": True,
+                    "sendNotification": True
+                }
+                return jsonify({"success": True, "config": default_config})
     except Exception as e:
-        logger.error(f"Error saving backup config: {e}")
+        logger.error(f"Error handling backup config: {e}")
         return jsonify({"success": False, "message": str(e)})
 
 
