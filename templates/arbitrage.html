@@ -406,11 +406,11 @@
         }
 
         .spread-list-item .bybit-spread.negative {
-            color: #ff4444;
+            color: #7CFC00;
         }
 
         .spread-list-item .binance-spread.positive {
-            color: #7CFC00;
+            color: #ff4444;
         }
 
         #spreadDataList {
@@ -621,11 +621,11 @@
         }
 
         .spread-value.positive {
-            color: #7CFC00;
+            color: #ff4444;
         }
 
         .spread-value.negative {
-            color: #ff4444;
+            color: #7CFC00;
         }
 
         .chart-container {
@@ -1293,6 +1293,20 @@
                 </div>
             </div>
             <div class="panel-content">
+            <div class="spread-display">
+                <div class="spread-item">
+                    <div class="price-label">做多Bybit</div>
+                    <div class="spread-value negative" id="spreadNegative">--</div>
+                </div>
+                <div class="spread-item">
+                    <div class="price-label">做多Binance</div>
+                    <div class="spread-value positive" id="spreadPositive">--</div>
+                </div>
+            </div>
+            <div class="chart-container" style="position: relative;">
+                <button class="panel-toggle-btn" onclick="toggleChart()" style="position: absolute; top: 10px; right: 10px; z-index: 10; background: none; border: none; color: #888; cursor: pointer; font-size: 1.2em;">▼</button>
+                <canvas id="spreadChart"></canvas>
+            </div>
             <div class="price-grid">
                 <div class="price-card bybit">
                     <div class="price-label">Bybit MT5 - XAUUSD.s</div>
@@ -1354,20 +1368,6 @@
                         <div class="heartbeat-line inactive" id="binanceHeartbeatLine"></div>
                     </div>
                 </div>
-            </div>
-            <div class="spread-display">
-                <div class="spread-item">
-                    <div class="price-label">做多Bybit</div>
-                    <div class="spread-value negative" id="spreadNegative">--</div>
-                </div>
-                <div class="spread-item">
-                    <div class="price-label">做多Binance</div>
-                    <div class="spread-value positive" id="spreadPositive">--</div>
-                </div>
-            </div>
-            <div class="chart-container" style="position: relative;">
-                <button class="panel-toggle-btn" onclick="toggleChart()" style="position: absolute; top: 10px; right: 10px; z-index: 10; background: none; border: none; color: #888; cursor: pointer; font-size: 1.2em;">▼</button>
-                <canvas id="spreadChart"></canvas>
             </div>
             </div>
         </div>
@@ -2443,9 +2443,9 @@
                 if (forwardSpreadElement) {
                     forwardSpreadElement.textContent = spreadPositive.toFixed(2);
                     // 颜色变化跟spreadPositive div一致
-                    // 当spreadPositive > 0时，显示为绿色
-                    // 当spreadPositive <= 0时，显示为红色
-                    forwardSpreadElement.style.color = spreadPositive > 0 ? '#7CFC00' : '#ff4444';
+                    // 当spreadPositive > 0时，显示为红色
+                    // 当spreadPositive <= 0时，显示为绿色
+                    forwardSpreadElement.style.color = spreadPositive > 0 ? '#ff4444' : '#7CFC00';
                 }
                 
                 if (forwardSpreadStatus) {
@@ -2530,14 +2530,14 @@
                     data: {
                         labels: spreadHistory.map(h => h.time.toLocaleTimeString()),
                         datasets: [{
-                            label: '做多Binance',
-                            data: spreadHistory.map(h => h.positive),
+                            label: '做多Bybit',
+                            data: spreadHistory.map(h => h.negative),
                             borderColor: '#7CFC00',
                             backgroundColor: 'rgba(124, 252, 0, 0.1)',
                             tension: 0.4
                         }, {
-                            label: '做多Bybit',
-                            data: spreadHistory.map(h => h.negative),
+                            label: '做多Binance',
+                            data: spreadHistory.map(h => h.positive),
                             borderColor: '#ff4444',
                             backgroundColor: 'rgba(255, 68, 68, 0.1)',
                             tension: 0.4
@@ -2575,8 +2575,8 @@
                 });
             } else {
                 spreadChart.data.labels = spreadHistory.map(h => h.time.toLocaleTimeString());
-                spreadChart.data.datasets[0].data = spreadHistory.map(h => h.positive);
-                spreadChart.data.datasets[1].data = spreadHistory.map(h => h.negative);
+                spreadChart.data.datasets[0].data = spreadHistory.map(h => h.negative);
+                spreadChart.data.datasets[1].data = spreadHistory.map(h => h.positive);
                 spreadChart.update('none');
             }
         }

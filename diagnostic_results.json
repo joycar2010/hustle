@@ -1,0 +1,98 @@
+{
+  "binance": {
+    "server_time": {
+      "status": "success",
+      "server_time": 1771148122674,
+      "local_time": 1771148120136,
+      "time_diff_ms": 2538,
+      "time_sync": "WARNING"
+    },
+    "market_data": {
+      "status": "success",
+      "symbol": "XAUUSDT",
+      "price": "5041.87",
+      "timestamp": 1771148117207
+    },
+    "api_key": {
+      "status": "failed",
+      "error": "API密钥无效或已过期",
+      "status_code": 401
+    },
+    "signature": {
+      "status": "failed",
+      "status_code": 401,
+      "error": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action, request ip: 35.213.31.45\"}"
+    }
+  },
+  "bybit": {
+    "mt5_init": {
+      "status": "success"
+    },
+    "mt5_login": {
+      "status": "success",
+      "login": 5229471,
+      "server": "Bybit-Live-2"
+    },
+    "account_info": {
+      "status": "success",
+      "login": 5229471,
+      "server": "Bybit-Live-2",
+      "company": "Infra Capital Limited",
+      "currency": "UST",
+      "balance": 0.0,
+      "equity": 0.0,
+      "margin": 0.0,
+      "free_margin": 0.0,
+      "margin_level": 0.0,
+      "profit": 0.0
+    },
+    "symbol_info": {
+      "status": "success",
+      "symbol": "XAUUSD.s",
+      "description": "Gold US Dollar",
+      "trade_mode": 4,
+      "digits": 2,
+      "point": 0.01,
+      "volume_min": 0.01,
+      "volume_max": 100.0,
+      "volume_step": 0.01,
+      "spread": 20
+    },
+    "tick_data": {
+      "status": "success",
+      "symbol": "XAUUSD.s",
+      "bid": 5043.26,
+      "ask": 5043.46,
+      "spread": 0.1999999999998181,
+      "time": "2026-02-14T07:56:59",
+      "volume": 0
+    }
+  },
+  "network": {
+    "Google DNS": {
+      "status": "success",
+      "response_time_ms": 1049.34,
+      "status_code": 200
+    },
+    "Binance API": {
+      "status": "success",
+      "response_time_ms": 553.05,
+      "status_code": 403
+    },
+    "Binance Spot": {
+      "status": "success",
+      "response_time_ms": 560.93,
+      "status_code": 200
+    },
+    "GitHub": {
+      "status": "success",
+      "response_time_ms": 773.17,
+      "status_code": 200
+    }
+  },
+  "summary": [
+    "✗ Binance API 连接存在问题",
+    "✓ Bybit MT5 连接正常",
+    "✓ 网络连接正常"
+  ]
+}
