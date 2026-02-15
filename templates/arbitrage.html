@@ -2214,6 +2214,7 @@
         let mcoinCloseEnabled = false;
         let forwardMcoinOpenEnabled = false;
         let forwardMcoinCloseEnabled = false;
+        let accountsData = []; // 存储账户信息，包括余额
         const HEARTBEAT_TIMEOUT = 30000; // 30秒无数据视为断开
 
         function initSocket() {
@@ -3117,6 +3118,14 @@
                 return;
             }
 
+            // 检查账户余额
+            const selectedAccount = accountsData.find(acc => acc.account_id === accountId);
+            if (selectedAccount && selectedAccount.balance <= 0) {
+                const accountType = accountId.includes('binance') ? 'Binance' : 'Bybit';
+                showError(`${accountType}账户余额为0，无法执行交易`);
+                return;
+            }
+
             // Get account type for better error messages
             const accountType = accountId.includes('binance') ? 'Binance' : 'Bybit';
 
@@ -3160,6 +3169,9 @@
 
                     const select = document.getElementById('manualAccountSelect');
                     select.innerHTML = '<option value="">选择账户</option>';
+                    
+                    // 清空账户数据
+                    accountsData = [];
 
                     result.accounts.forEach(account => {
                         const accountInfo = account.account_info || {};
@@ -3170,6 +3182,17 @@
                         const profit = accountInfo.profit || 0;
                         const positions = accountInfo.positions || [];
                         const totalPosition = positions.reduce((sum, pos) => sum + (pos.volume || 0), 0);
+                        
+                        // 存储账户数据
+                        accountsData.push({
+                            account_id: account.account_id,
+                            platform: account.platform,
+                            account_type: account.account_type,
+                            connected: account.connected,
+                            balance: balance,
+                            equity: equity,
+                            margin: margin
+                        });
 
                         const div = document.createElement('div');
                         div.className = 'account-item' + (account.connected ? ' connected' : '');
