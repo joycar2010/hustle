@@ -13,7 +13,42 @@
       "updated_at": "2026-02-14T00:36:07.075079"
     }
   },
-  "strategy_settings": {},
+  "strategy_settings": {
+    "reverse_arbitrage_bybit": {
+      "strategy": [
+        {
+          "layer": "1",
+          "open_price": 0,
+          "spread": 0.7,
+          "binance_size_limit": 1,
+          "bybit_size_limit": 0.01,
+          "strategy_type": "reverse_arbitrage_bybit"
+        }
+      ],
+      "mcoin_order_size": 1,
+      "open_sync": 5,
+      "close_sync": 5,
+      "strategy_type": "reverse_arbitrage_bybit",
+      "updated_at": "2026-02-15T19:59:46.087670"
+    },
+    "forward_arbitrage_binance": {
+      "strategy": [
+        {
+          "layer": "1",
+          "open_price": 0.08,
+          "spread": 0.5,
+          "binance_size_limit": 1,
+          "bybit_size_limit": 0.01,
+          "strategy_type": "forward_arbitrage_binance"
+        }
+      ],
+      "mcoin_order_size": 1,
+      "open_sync": 3,
+      "close_sync": 3,
+      "strategy_type": "forward_arbitrage_binance",
+      "updated_at": "2026-02-15T19:59:23.640432"
+    }
+  },
   "alert_settings": {
     "binanceEquityAlert": 0,
     "bybitEquityAlert": 0,

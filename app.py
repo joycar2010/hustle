@@ -371,7 +371,7 @@ def save_grid_strategy():
     open_sync = data.get('open_sync')
     close_sync = data.get('close_sync')
 
-    if not strategy or mcoin_order_size is None:
+    if mcoin_order_size is None:
         return jsonify({"success": False, "message": "Missing required fields"})
 
     try:
@@ -379,6 +379,9 @@ def save_grid_strategy():
         strategy_type = 'reverse_arbitrage_bybit'
         if strategy and len(strategy) > 0:
             strategy_type = strategy[0].get('strategy_type', 'reverse_arbitrage_bybit')
+        # 也可以从请求数据的顶层获取 strategy_type
+        elif data.get('strategy_type'):
+            strategy_type = data.get('strategy_type')
 
         # 保存到内存存储
         grid_strategy = {
@@ -540,12 +543,16 @@ def manual_trade():
         return jsonify({"success": False, "message": "Missing required fields"})
 
     with gateway_lock:
-        if account_id.startswith('bybit') and gateway:
+        if account_id.startswith('bybit') and gateway and hasattr(gateway, 'connected') and gateway.connected:
             order_id = execute_order(account_id, direction, price, size)
             return jsonify({"success": True, "order_id": order_id, "message": "Order placed"})
-        elif account_id.startswith('binance') and binance_gateway:
+        elif account_id.startswith('binance') and binance_gateway and hasattr(binance_gateway, 'connected') and binance_gateway.connected:
             order_id = execute_order(account_id, direction, price, size)
             return jsonify({"success": True, "order_id": order_id, "message": "Order placed"})
+        elif account_id.startswith('bybit'):
+            return jsonify({"success": False, "message": "Bybit account not connected"})
+        elif account_id.startswith('binance'):
+            return jsonify({"success": False, "message": "Binance account not connected"})
         else:
             return jsonify({"success": False, "message": "Account not connected"})
 

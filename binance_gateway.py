@@ -196,7 +196,7 @@ class BinanceGateway:
                     except Exception as e:
                         logger.error(f"Callback error: {e}")
 
-            time.sleep(1)
+            time.sleep(0.85)
 
     def add_callback(self, callback):
         self.callbacks.append(callback)

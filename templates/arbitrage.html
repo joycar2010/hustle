@@ -2867,6 +2867,7 @@
             // 保存策略到数据库
             const strategyData = {
                 strategy: strategy,
+                strategy_type: 'reverse_arbitrage_bybit',
                 mcoin_order_size: mCoinOrderSize,
                 open_sync: parseInt(document.getElementById('openSyncInput').value) || 1,
                 close_sync: parseInt(document.getElementById('closeSyncInput').value) || 1
@@ -3091,6 +3092,28 @@
 
             if (!size || isNaN(size) || size <= 0) {
                 showError('请输入有效的数量');
+                return;
+            }
+
+            // 检查账户连接状态
+            const bybitHeartbeat = document.getElementById('bybitHeartbeat');
+            const binanceHeartbeat = document.getElementById('binanceHeartbeat');
+            
+            if (!bybitHeartbeat || !binanceHeartbeat) {
+                showError('无法获取账户连接状态');
+                return;
+            }
+            
+            const bybitConnected = bybitHeartbeat.textContent === '已连接';
+            const binanceConnected = binanceHeartbeat.textContent === '已连接';
+            
+            if (accountId.includes('binance') && !binanceConnected) {
+                showError('Binance账户没有连接');
+                return;
+            }
+            
+            if (accountId.includes('bybit') && !bybitConnected) {
+                showError('Bybit账户没有连接');
                 return;
             }
 
@@ -3520,6 +3543,48 @@
                     if (data.success) {
                         const settings = data.data;
                         document.getElementById('mCoinOrderSize').value = settings.mcoin_order_size || 1;
+                        
+                        // 加载策略数据
+                        if (settings.strategy && settings.strategy.length > 0) {
+                            // 清空现有阶梯层
+                            const container = document.getElementById('gridStrategyContainer');
+                            container.innerHTML = '';
+                            
+                            // 重新创建阶梯层
+                            settings.strategy.forEach((layerData, index) => {
+                                const layerNumber = index + 1;
+                                const layerElement = document.createElement('div');
+                                layerElement.className = 'grid-strategy-layer';
+                                layerElement.dataset.layer = layerNumber;
+                                layerElement.innerHTML = `
+                                    <div class="layer-header">
+                                        <span class="layer-title">阶梯 ${layerNumber}</span>
+                                        <div class="layer-actions">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" class="layer-enable" checked>
+                                                <span>启用</span>
+                                            </label>
+                                            <button class="btn-small delete" onclick="removeGridLayer(${layerNumber})")">删除</button>
+                                        </div>
+                                    </div>
+                                    <div class="layer-params">
+                                        <div class="control-group">
+                                            <label>开仓价</label>
+                                            <input type="number" class="grid-open-price" value="${layerData.open_price || 0}" step="0.01">
+                                        </div>
+                                        <div class="control-group">
+                                            <label>阈值</label>
+                                            <input type="number" class="grid-spread" value="${layerData.spread || 0}" step="0.1">
+                                        </div>
+                                        <div class="control-group">
+                                            <label>下单数量限制</label>
+                                            <input type="number" class="grid-size-limit" value="${layerData.binance_size_limit || 1}" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
+                                        </div>
+                                    </div>
+                                `;
+                                container.appendChild(layerElement);
+                            });
+                        }
                     }
                 })
                 .catch(error => {
@@ -3533,6 +3598,47 @@
                     if (data.success) {
                         const settings = data.data;
                         document.getElementById('forwardMCoinOrderSize').value = settings.mcoin_order_size || 1;
+                        
+                        // 加载策略数据
+                        const container = document.getElementById('forwardGridStrategyContainer');
+                        container.innerHTML = '';
+                        
+                        // 重新创建阶梯层
+                        if (settings.strategy && settings.strategy.length > 0) {
+                            settings.strategy.forEach((layerData, index) => {
+                                const layerNumber = index + 1;
+                                const layerElement = document.createElement('div');
+                                layerElement.className = 'grid-strategy-layer';
+                                layerElement.dataset.layer = layerNumber;
+                                layerElement.innerHTML = `
+                                    <div class="layer-header">
+                                        <span class="layer-title">阶梯 ${layerNumber}</span>
+                                        <div class="layer-actions">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" class="layer-enable" checked>
+                                                <span>启用</span>
+                                            </label>
+                                            <button class="btn-small delete" onclick="removeForwardGridLayer(${layerNumber})">删除</button>
+                                        </div>
+                                    </div>
+                                    <div class="layer-params">
+                                        <div class="control-group">
+                                            <label>开仓价</label>
+                                            <input type="number" class="grid-open-price" value="${layerData.open_price || 0}" step="0.01">
+                                        </div>
+                                        <div class="control-group">
+                                            <label>阈值</label>
+                                            <input type="number" class="grid-spread" value="${layerData.spread || 0}" step="0.1">
+                                        </div>
+                                        <div class="control-group">
+                                            <label>下单数量限制</label>
+                                            <input type="number" class="grid-size-limit" value="${layerData.binance_size_limit || 1}" step="1" min="1" oninput="validateIntegerInput(this)" onkeydown="restrictToNumbers(event)">
+                                        </div>
+                                    </div>
+                                `;
+                                container.appendChild(layerElement);
+                            });
+                        }
                     }
                 })
                 .catch(error => {
@@ -4377,6 +4483,7 @@
             // 保存策略到数据库
             const strategyData = {
                 strategy: strategy,
+                strategy_type: 'forward_arbitrage_binance',
                 mcoin_order_size: mCoinOrderSize,
                 open_sync: parseInt(document.getElementById('forwardOpenSyncInput').value) || 1,
                 close_sync: parseInt(document.getElementById('forwardCloseSyncInput').value) || 1

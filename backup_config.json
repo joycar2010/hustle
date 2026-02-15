@@ -1,6 +1,6 @@
 {
   "frequency": "daily",
-  "time": "09:00",
+  "time": "10:00",
   "branch": "master",
   "commitTemplate": "自动备份: {datetime}",
   "includeConfig": true,
