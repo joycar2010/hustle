@@ -1,29 +1,29 @@
 {
   "accounts": [
     {
-      "account_id": "default_binance_real_c680f28a",
-      "platform": "binance",
-      "account_type": "real",
-      "credentials": {
-        "account_id": "0OYJ2YLAoFNrZCMf5mKDgbm887JD69YXfYt1p5XMnao7PQxXVDxHPXSeQSe7f6Bi",
-        "password": "qIvY5MUDcp5ZJtPzyW0DCbTI1dJElyiAfL6KhytTsTvIHIBOKbDEiRVAefniZvC2"
-      }
-    },
-    {
-      "account_id": "default_bybit_real_024780b4",
+      "account_id": "default_bybit_real_e38dfe54",
       "platform": "bybit",
       "account_type": "real",
       "credentials": {
-        "account_id": "5229471",
-        "password": "Lk106504!",
+        "account_id": "3971962",
+        "password": "Aq987456!",
         "server": "Bybit-Live-2"
+      }
+    },
+    {
+      "account_id": "default_binance_real_fafc20af",
+      "platform": "binance",
+      "account_type": "real",
+      "credentials": {
+        "account_id": "5GkClMEFIPLYZ09tMRE76jgsIoo5mEQgBfSGxC4CHGxQQcBf6Ijb6On8QeSfQdvc",
+        "password": "ARXkb759WMwx2lnM1DKseS1sDvY65qJUuQ1Y7USlnuw7QIb1BbVUXLNSrssNmrDj"
       }
     }
   ],
   "user_accounts": {
     "default": [
-      "default_binance_real_c680f28a",
-      "default_bybit_real_024780b4"
+      "default_bybit_real_e38dfe54",
+      "default_binance_real_fafc20af"
     ]
   }
 }

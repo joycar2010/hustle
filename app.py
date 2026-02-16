@@ -2,9 +2,11 @@ from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict
 import logging
+import sqlite3
+import json
 from config import MT5_GATEWAY_CONFIG, WEBSERVER_CONFIG, DATA_CONFIG, BINANCE_CONFIG
 from mt5_gateway import MT5Gateway
 from binance_gateway import BinanceGateway
@@ -31,12 +33,88 @@ strategy_lock = threading.Lock()
 trade_history = []
 trade_history_lock = threading.Lock()
 
+# 点差数据存储
+spread_history_db = []
+spread_history_lock = threading.Lock()
+spread_db_file = "spread_history.db"
+
 # 设置存储
 sync_settings_store = {}
 strategy_settings_store = {}
 alert_settings_store = {}
 settings_lock = threading.Lock()
 settings_file = "arbitrage_settings.json"
+
+# 初始化点差数据库
+def init_spread_database():
+    conn = sqlite3.connect(spread_db_file)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS spread_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            time TEXT NOT NULL,
+            positive REAL,
+            negative REAL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    logger.info("Spread database initialized")
+
+# 保存点差数据到数据库
+def save_spread_to_db(time, positive, negative):
+    conn = sqlite3.connect(spread_db_file)
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO spread_data (time, positive, negative)
+        VALUES (?, ?, ?)
+    ''', (time.isoformat(), positive, negative))
+    conn.commit()
+    conn.close()
+
+# 从数据库加载点差数据
+def load_spread_from_db(start_time=None, end_time=None):
+    conn = sqlite3.connect(spread_db_file)
+    cursor = conn.cursor()
+    
+    if start_time and end_time:
+        cursor.execute('''
+            SELECT time, positive, negative FROM spread_data
+            WHERE time >= ? AND time <= ?
+            ORDER BY time DESC
+        ''', (start_time.isoformat(), end_time.isoformat()))
+    else:
+        cursor.execute('''
+            SELECT time, positive, negative FROM spread_data
+            ORDER BY time DESC
+            LIMIT 1000
+        ''')
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [
+        {
+            'time': row[0],
+            'positive': row[1],
+            'negative': row[2]
+        }
+        for row in rows
+    ]
+
+# 清理旧数据
+def cleanup_old_spread_data(days=30):
+    conn = sqlite3.connect(spread_db_file)
+    cursor = conn.cursor()
+    cutoff_time = datetime.now() - timedelta(days=days)
+    cursor.execute('''
+        DELETE FROM spread_data
+        WHERE time < ?
+    ''', (cutoff_time.isoformat(),))
+    conn.commit()
+    conn.close()
+    logger.info(f"Cleaned up spread data older than {days} days")
 
 # 加载设置
 try:
@@ -279,6 +357,123 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     logger.info(f"Client disconnected: {request.sid}")
+
+
+@app.route('/binance-test')
+def binance_test_page():
+    """Binance API测试页面"""
+    return render_template('binance_test.html')
+
+
+@app.route('/api/binance/test-connection', methods=['POST'])
+def test_binance_connection():
+    """测试Binance API连接"""
+    data = request.get_json()
+    api_key = data.get('api_key')
+    secret_key = data.get('secret_key')
+    api_type = data.get('api_type', 'futures')
+
+    if not api_key or not secret_key:
+        return jsonify({"success": False, "message": "Missing API key or secret key"})
+
+    try:
+        if api_type == 'futures':
+            base_url = BINANCE_CONFIG.get('base_url', 'https://fapi.binance.com')
+        else:
+            base_url = 'https://api.binance.com'
+
+        # 创建临时网关进行测试
+        test_gateway = BinanceGateway(
+            api_key=api_key,
+            secret_key=secret_key,
+            base_url=base_url,
+            symbol=BINANCE_CONFIG.get('symbol', 'BTCUSDT'),
+            timeout=10
+        )
+
+        if test_gateway.connect():
+            logger.info(f"Binance {api_type} connection test successful")
+            return jsonify({
+                "success": True,
+                "message": "连接成功",
+                "data": {
+                    "api_type": api_type,
+                    "base_url": base_url,
+                    "connected": True
+                }
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "连接失败，请检查API密钥和网络连接",
+                "error": {
+                    "api_type": api_type,
+                    "base_url": base_url
+                }
+            })
+    except Exception as e:
+        logger.error(f"Error testing Binance connection: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"连接测试失败: {str(e)}",
+            "error": str(e)
+        })
+
+
+@app.route('/api/binance/account-info', methods=['POST'])
+def get_binance_account_info():
+    """获取Binance账户信息"""
+    data = request.get_json()
+    api_key = data.get('api_key')
+    secret_key = data.get('secret_key')
+    api_type = data.get('api_type', 'futures')
+
+    if not api_key or not secret_key:
+        return jsonify({"success": False, "message": "Missing API key or secret key"})
+
+    try:
+        if api_type == 'futures':
+            base_url = BINANCE_CONFIG.get('base_url', 'https://fapi.binance.com')
+        else:
+            base_url = 'https://api.binance.com'
+
+        # 创建临时网关获取账户信息
+        test_gateway = BinanceGateway(
+            api_key=api_key,
+            secret_key=secret_key,
+            base_url=base_url,
+            symbol=BINANCE_CONFIG.get('symbol', 'BTCUSDT'),
+            timeout=10
+        )
+
+        if not test_gateway.connect():
+            return jsonify({
+                "success": False,
+                "message": "无法连接到Binance API"
+            })
+
+        account_info = test_gateway.get_account_info()
+        
+        if account_info:
+            logger.info(f"Successfully retrieved Binance {api_type} account info")
+            return jsonify({
+                "success": True,
+                "message": "获取账户信息成功",
+                "data": account_info
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "无法获取账户信息，请检查API密钥权限",
+                "error": "Failed to get account info"
+            })
+    except Exception as e:
+        logger.error(f"Error getting Binance account info: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"获取账户信息失败: {str(e)}",
+            "error": str(e)
+        })
 
 
 @app.route('/')
@@ -681,16 +876,24 @@ def connect_account(account_id):
                     binance_gateway.add_callback(broadcast_binance_price)
                     binance_gateway.start_streaming()
                     
-                    ticker = binance_gateway.get_24h_ticker()
-                    balance = ticker.get('quoteVolume', 0) if ticker else 0
-                    
-                    account_manager.update_account_status(account_id, True, {"balance": balance})
-                    
-                    socketio.emit('account_status_update', {
-                        "account_id": account_id,
-                        "connected": True,
-                        "account_info": {"balance": balance}
-                    })
+                    account_info = binance_gateway.get_account_info()
+                    if account_info:
+                        account_manager.update_account_status(account_id, True, account_info)
+                        
+                        socketio.emit('account_status_update', {
+                            "account_id": account_id,
+                            "connected": True,
+                            "account_info": account_info
+                        })
+                    else:
+                        # 如果无法获取账户信息，仍然标记为已连接，但余额为0
+                        account_manager.update_account_status(account_id, True, {"balance": 0})
+                        
+                        socketio.emit('account_status_update', {
+                            "account_id": account_id,
+                            "connected": True,
+                            "account_info": {"balance": 0}
+                        })
                     
                     logger.info(f"Binance account connected: {account_id}")
                     return jsonify({"success": True, "message": "Connected successfully"})
@@ -1301,8 +1504,78 @@ def delete_all_history():
         return jsonify({"success": False, "message": str(e)})
 
 
+@app.route('/api/spread/save', methods=['POST'])
+def save_spread_data():
+    """保存点差数据到数据库"""
+    data = request.get_json()
+    time = data.get('time')
+    positive = data.get('positive')
+    negative = data.get('negative')
+    
+    if time is None or positive is None or negative is None:
+        return jsonify({"success": False, "message": "Missing required fields"})
+    
+    try:
+        # 保存到数据库
+        save_spread_to_db(datetime.fromisoformat(time), positive, negative)
+        
+        # 同时保存到内存中用于实时显示
+        with spread_history_lock:
+            spread_history_db.append({
+                'time': datetime.fromisoformat(time),
+                'positive': positive,
+                'negative': negative
+            })
+            # 限制内存中的数据量
+            if len(spread_history_db) > 100:
+                spread_history_db = spread_history_db[-100:]
+        
+        logger.info(f"Saved spread data: time={time}, positive={positive}, negative={negative}")
+        return jsonify({"success": True, "message": "点差数据保存成功"})
+    except Exception as e:
+        logger.error(f"Error saving spread data: {e}")
+        return jsonify({"success": False, "message": f"保存失败: {str(e)}"})
+
+
+@app.route('/api/spread/load', methods=['GET'])
+def load_spread_data():
+    """从数据库加载点差数据"""
+    start_time = request.args.get('start_time')
+    end_time = request.args.get('end_time')
+    
+    try:
+        if start_time:
+            start_time = datetime.fromisoformat(start_time)
+        if end_time:
+            end_time = datetime.fromisoformat(end_time)
+        
+        data = load_spread_from_db(start_time, end_time)
+        return jsonify({"success": True, "data": data})
+    except Exception as e:
+        logger.error(f"Error loading spread data: {e}")
+        return jsonify({"success": False, "message": f"加载失败: {str(e)}"})
+
+
+@app.route('/api/spread/cleanup', methods=['POST'])
+def cleanup_spread_data():
+    """清理旧数据"""
+    data = request.get_json()
+    days = data.get('days', 30)
+    
+    try:
+        cleanup_old_spread_data(days)
+        return jsonify({"success": True, "message": f"已清理{days}天前的数据"})
+    except Exception as e:
+        logger.error(f"Error cleaning up spread data: {e}")
+        return jsonify({"success": False, "message": f"清理失败: {str(e)}"})
+
+
 if __name__ == '__main__':
     logger.info(f"Starting web server on {WEBSERVER_CONFIG['host']}:{WEBSERVER_CONFIG['port']}")
+    # 初始化点差数据库
+    init_spread_database()
+    # 清理30天前的旧数据
+    cleanup_old_spread_data(30)
     # 启动保证金状态广播
     start_margin_status_broadcast()
     socketio.run(app, host=WEBSERVER_CONFIG['host'], port=WEBSERVER_CONFIG['port'], debug=WEBSERVER_CONFIG['debug'])

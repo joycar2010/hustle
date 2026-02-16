@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance API 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #f0a500;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #00d4ff;
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            background: #00b8e6;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        .btn-success:hover {
+            background: #00e676;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #e63946;
+        }
+
+        .result-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .success {
+            color: #00ff88;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .info {
+            color: #00d4ff;
+        }
+
+        .account-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .info-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .balance-list {
+            margin-top: 15px;
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #00d4ff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+
+        .status-disconnected {
+            background: #ff4444;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Binance API 测试工具</h1>
+
+        <div class="test-section">
+            <div class="section-title">API 配置</div>
+            <div class="form-group">
+                <label for="apiKey">API Key</label>
+                <input type="text" id="apiKey" placeholder="输入 Binance API Key" value="5GkClMEFIPLYZ09tMRE76jgsIoo5mEQgBfSGxC4CHGxQQcBf6Ijb6On8QeSfQdvc">
+            </div>
+            <div class="form-group">
+                <label for="secretKey">Secret Key</label>
+                <input type="password" id="secretKey" placeholder="输入 Binance Secret Key" value="ARXkb759WMwx2lnM1DKseS1sDvY65qJUuQ1Y7USlnuw7QIb1BbVUXLNSrssNmrDj">
+            </div>
+            <div class="form-group">
+                <label for="apiType">API 类型</label>
+                <select id="apiType">
+                    <option value="futures">Futures (合约)</option>
+                    <option value="spot">Spot (现货)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn-primary" onclick="testConnection()">测试连接</button>
+                <button class="btn-success" onclick="getAccountInfo()">获取账户信息</button>
+                <button class="btn-danger" onclick="clearResults()">清除结果</button>
+            </div>
+        </div>
+
+        <div class="test-section" id="accountSection" style="display: none;">
+            <div class="section-title">账户信息</div>
+            <div class="account-info" id="accountInfo">
+            </div>
+            <div class="balance-list" id="balanceList">
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">测试结果</div>
+            <div class="result-container" id="resultContainer">
+                <div class="info">点击上方按钮开始测试...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = [];
+
+        function addResult(type, message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            let result = `[${timestamp}] ${type}: ${message}`;
+            
+            if (data) {
+                result += '\n' + JSON.stringify(data, null, 2);
+            }
+            
+            testResults.push(result);
+            updateResultDisplay();
+        }
+
+        function updateResultDisplay() {
+            const container = document.getElementById('resultContainer');
+            container.innerHTML = testResults.join('\n\n');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearResults() {
+            testResults = [];
+            document.getElementById('resultContainer').innerHTML = '<div class="info">结果已清除</div>';
+            document.getElementById('accountSection').style.display = 'none';
+        }
+
+        async function testConnection() {
+            const apiKey = document.getElementById('apiKey').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const apiType = document.getElementById('apiType').value;
+
+            if (!apiKey || !secretKey) {
+                addResult('error', '请输入 API Key 和 Secret Key');
+                return;
+            }
+
+            addResult('info', '开始测试连接...');
+            addResult('info', `API 类型: ${apiType}`);
+
+            try {
+                const response = await fetch('/api/binance/test-connection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        secret_key: secretKey,
+                        api_type: apiType
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addResult('success', '连接成功', result.data);
+                } else {
+                    addResult('error', '连接失败: ' + result.message, result.error);
+                }
+            } catch (error) {
+                addResult('error', '请求错误: ' + error.message);
+            }
+        }
+
+        async function getAccountInfo() {
+            const apiKey = document.getElementById('apiKey').value;
+            const secretKey = document.getElementById('secretKey').value;
+            const apiType = document.getElementById('apiType').value;
+
+            if (!apiKey || !secretKey) {
+                addResult('error', '请输入 API Key 和 Secret Key');
+                return;
+            }
+
+            addResult('info', '获取账户信息...');
+            addResult('info', `API 类型: ${apiType}`);
+
+            try {
+                const response = await fetch('/api/binance/account-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey,
+                        secret_key: secretKey,
+                        api_type: apiType
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addResult('success', '获取账户信息成功', result.data);
+                    displayAccountInfo(result.data);
+                } else {
+                    addResult('error', '获取账户信息失败: ' + result.message, result.error);
+                }
+            } catch (error) {
+                addResult('error', '请求错误: ' + error.message);
+            }
+        }
+
+        function displayAccountInfo(data) {
+            const accountSection = document.getElementById('accountSection');
+            const accountInfo = document.getElementById('accountInfo');
+            const balanceList = document.getElementById('balanceList');
+
+            accountSection.style.display = 'block';
+
+            // 显示账户基本信息
+            let infoHTML = '';
+            
+            if (data.totalWalletBalance !== undefined) {
+                infoHTML += `
+                    <div class="info-card">
+                        <h3>总余额</h3>
+                        <div class="value">${parseFloat(data.totalWalletBalance).toFixed(2)} USDT</div>
+                    </div>
+                `;
+            }
+            
+            if (data.totalMarginBalance !== undefined) {
+                infoHTML += `
+                    <div class="info-card">
+                        <h3>保证金余额</h3>
+                        <div class="value">${parseFloat(data.totalMarginBalance).toFixed(2)} USDT</div>
+                    </div>
+                `;
+            }
+            
+            if (data.totalAvailableMargin !== undefined) {
+                infoHTML += `
+                    <div class="info-card">
+                        <h3>可用保证金</h3>
+                        <div class="value">${parseFloat(data.totalAvailableMargin).toFixed(2)} USDT</div>
+                    </div>
+                `;
+            }
+            
+            if (data.totalPositionInitialMargin !== undefined) {
+                infoHTML += `
+                    <div class="info-card">
+                        <h3>持仓保证金</h3>
+                        <div class="value">${parseFloat(data.totalPositionInitialMargin).toFixed(2)} USDT</div>
+                    </div>
+                `;
+            }
+
+            accountInfo.innerHTML = infoHTML;
+
+            // 显示余额列表
+            let balanceHTML = '';
+            
+            if (data.balances && data.balances.length > 0) {
+                const nonZeroBalances = data.balances.filter(b => 
+                    parseFloat(b.free) > 0 || parseFloat(b.locked) > 0
+                );
+                
+                if (nonZeroBalances.length > 0) {
+                    balanceHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">资产余额</h3>';
+                    nonZeroBalances.forEach(balance => {
+                        const total = parseFloat(balance.free) + parseFloat(balance.locked);
+                        if (total > 0) {
+                            balanceHTML += `
+                                <div class="balance-item">
+                                    <span>${balance.asset}</span>
+                                    <span>
+                                        可用: ${parseFloat(balance.free).toFixed(4)} | 
+                                        冻结: ${parseFloat(balance.locked).toFixed(4)} | 
+                                        总计: ${total.toFixed(4)}
+                                    </span>
+                                </div>
+                            `;
+                        }
+                    });
+                } else {
+                    balanceHTML = '<div class="info">没有找到非零余额</div>';
+                }
+            } else if (data.positions && data.positions.length > 0) {
+                balanceHTML = '<h3 style="color: #00d4ff; margin-bottom: 10px;">持仓信息</h3>';
+                const activePositions = data.positions.filter(p => parseFloat(p.positionAmt) !== 0);
+                
+                if (activePositions.length > 0) {
+                    activePositions.forEach(position => {
+                        balanceHTML += `
+                            <div class="balance-item">
+                                <span>${position.symbol}</span>
+                                <span>
+                                    方向: ${parseFloat(position.positionAmt) > 0 ? '多' : '空'} | 
+                                    数量: ${Math.abs(parseFloat(position.positionAmt)).toFixed(4)} | 
+                                    价格: ${parseFloat(position.entryPrice).toFixed(2)}
+                                </span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    balanceHTML = '<div class="info">没有活跃持仓</div>';
+                }
+            } else {
+                balanceHTML = '<div class="info">没有找到余额或持仓信息</div>';
+            }
+
+            balanceList.innerHTML = balanceHTML;
+        }
+
+        // 页面加载时自动测试连接
+        window.onload = function() {
+            addResult('info', '页面加载完成，准备测试...');
+        };
+    </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
       "open_sync": 5,
       "close_sync": 5,
       "strategy_type": "reverse_arbitrage_bybit",
-      "updated_at": "2026-02-14T00:35:56.430918"
+      "updated_at": "2026-02-16T15:18:30.917252"
     },
     "forward_arbitrage_binance": {
       "open_sync": 3,

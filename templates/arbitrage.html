@@ -1255,6 +1255,15 @@
                 bottom: 10px;
             }
         }
+
+        .spread-list > div:first-child:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.02);
+        }
+
+        .spread-list > div:first-child:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -1353,7 +1362,7 @@
                     </div>
                 </div>
                 <div class="spread-list" style="display: flex; flex-direction: column;">
-                    <div style="font-size: 0.9em; font-weight: 600; color: #ffd700; margin-bottom: 10px; text-align: center; padding: 10px; background: rgba(255, 215, 0, 0.1); border-radius: 6px;">点差数据</div>
+                    <div style="font-size: 0.9em; font-weight: 600; color: #ffd700; margin-bottom: 10px; text-align: center; padding: 10px; background: rgba(255, 215, 0, 0.1); border-radius: 6px; cursor: pointer; transition: all 0.2s ease;" onclick="showSpreadDataModal()">点差数据</div>
                     <div id="spreadDataList" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end;">
                         <div style="font-size: 0.8em; color: #888; text-align: center; margin: 20px 0;">等待数据更新...</div>
                     </div>
@@ -2219,6 +2228,83 @@
         </div>
     </div>
 
+    <div class="modal" id="spreadDataModal">
+        <div class="modal-content" style="max-width: 900px; width: 95%;">
+            <div class="modal-header">
+                点差数据记录
+                <button onclick="hideSpreadDataModal()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255, 255, 255, 0.6); font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: #ffd700;">查询方式</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn" onclick="filterSpreadData('week')" style="background: rgba(0, 204, 255, 0.2); color: #00ccff; flex: 1;">按周</button>
+                            <button class="btn" onclick="filterSpreadData('day')" style="background: rgba(0, 204, 255, 0.2); color: #00ccff; flex: 1;">按天</button>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: #ffd700;">时间范围</div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="datetime-local" id="startDate" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: #fff;">
+                            <span style="color: rgba(255, 255, 255, 0.6);">至</span>
+                            <input type="datetime-local" id="endDate" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.05); color: #fff;">
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: #ffd700;">数据统计</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 0.85em;">
+                            <div style="color: rgba(255, 255, 255, 0.6);">总记录数</div>
+                            <div id="totalRecords" style="color: #00ccff; text-align: right;">0</div>
+                            <div style="color: rgba(255, 255, 255, 0.6);">平均点差</div>
+                            <div id="avgSpread" style="color: #00ccff; text-align: right;">0</div>
+                            <div style="color: rgba(255, 255, 255, 0.6);">最大点差</div>
+                            <div id="maxSpread" style="color: #00ccff; text-align: right;">0</div>
+                            <div style="color: rgba(255, 255, 255, 0.6);">最小点差</div>
+                            <div id="minSpread" style="color: #00ccff; text-align: right;">0</div>
+                        </div>
+                        <button class="btn" onclick="refreshSpreadData()" style="width: 100%; margin-top: 10px; background: rgba(0, 204, 255, 0.3); color: #00ccff;">刷新数据</button>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 15px; color: #ffd700;">数据列表</div>
+                        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; max-height: 400px; overflow-y: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                        <th style="padding: 10px; text-align: left; color: rgba(255, 255, 255, 0.6);">时间</th>
+                                        <th style="padding: 10px; text-align: right; color: rgba(255, 255, 255, 0.6);">Bybit点差</th>
+                                        <th style="padding: 10px; text-align: right; color: rgba(255, 255, 255, 0.6);">Binance点差</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="spreadDataTable">
+                                    <tr>
+                                        <td colspan="3" style="padding: 20px; text-align: center; color: rgba(255, 255, 255, 0.4);">暂无数据</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 15px; color: #ffd700;">线形图分析</div>
+                        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px; height: 400px; overflow: hidden;">
+                            <canvas id="spreadChart" style="height: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="exportSpreadData()" style="background: rgba(0, 204, 255, 0.2); color: #00ccff;">导出数据</button>
+                <button class="btn btn-primary" onclick="hideSpreadDataModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <div class="alert-modal" id="alertModal">
         <div class="alert-modal-content">
             <div class="alert-modal-header" id="alertModalTitle">提示</div>
@@ -2396,15 +2482,20 @@
                 // 更新点差数据列表
                 updateSpreadDataList(spreadNegative, spreadPositive);
 
-                spreadHistory.push({
+                const spreadData = {
                     time: new Date(),
                     positive: spreadPositive,
                     negative: spreadNegative
-                });
+                };
+
+                spreadHistory.push(spreadData);
 
                 if (spreadHistory.length > 100) {
                     spreadHistory.shift();
                 }
+
+                // 实时保存到数据库
+                saveSpreadDataToServer(spreadData);
 
                 updateChart();
             }
@@ -2500,10 +2591,7 @@
 
         function updateForwardAccountData(platform) {
             // 更新正向套利面板的账户数据
-            // 这里应该从服务器获取最新的账户数据
-            // 暂时使用模拟数据，实际应用中应该从服务器获取
-            const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
-            const account = accounts.find(acc => acc.platform === platform);
+            const account = accountsData.find(acc => acc.platform === platform && acc.connected);
             
             const accountElement = document.getElementById(`forwardRealTime${platform.charAt(0).toUpperCase() + platform.slice(1)}`);
             const statusElement = document.getElementById(`forward${platform.charAt(0).toUpperCase() + platform.slice(1)}RefreshStatus`);
@@ -2527,10 +2615,8 @@
         }
 
         function updateAccountData(platform) {
-            // 这里应该从服务器获取最新的账户数据
-            // 暂时使用模拟数据，实际应用中应该从服务器获取
-            const accounts = JSON.parse(localStorage.getItem('accounts')) || [];
-            const account = accounts.find(acc => acc.platform === platform);
+            // 更新反向套利面板的账户数据
+            const account = accountsData.find(acc => acc.platform === platform && acc.connected);
             
             const accountElement = document.getElementById(`realTime${platform.charAt(0).toUpperCase() + platform.slice(1)}`);
             const statusElement = document.getElementById(`${platform}RefreshStatus`);
@@ -2610,6 +2696,32 @@
                 spreadChart.data.datasets[1].data = spreadHistory.map(h => h.positive);
                 spreadChart.update('none');
             }
+        }
+
+        function saveSpreadDataToServer(spreadData) {
+            // 实时保存点差数据到服务器
+            fetch('/api/spread/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    time: spreadData.time.toISOString(),
+                    positive: spreadData.positive,
+                    negative: spreadData.negative
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('点差数据保存成功:', spreadData);
+                } else {
+                    console.error('点差数据保存失败:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('保存点差数据出错:', error);
+            });
         }
 
         function toggleChart() {
@@ -3209,9 +3321,17 @@
                         const equity = accountInfo.equity || balance;
                         const margin = accountInfo.margin || 0;
                         const marginLevel = margin > 0 ? ((equity / margin) * 100).toFixed(2) : '--';
-                        const profit = accountInfo.profit || 0;
+                        const profit = accountInfo.profit || accountInfo.daily_pnl || 0;
                         const positions = accountInfo.positions || [];
-                        const totalPosition = positions.reduce((sum, pos) => sum + (pos.volume || 0), 0);
+                        const totalPosition = accountInfo.total_position || positions.reduce((sum, pos) => sum + (pos.volume || 0), 0);
+                        const uid = accountInfo.uid || '';
+                        const totalAssets = accountInfo.total_assets || balance;
+                        const availableAssets = accountInfo.available_assets || accountInfo.free_margin || 0;
+                        const netAssets = accountInfo.net_assets || equity;
+                        const frozenAssets = accountInfo.frozen_assets || 0;
+                        const dailyPnl = accountInfo.daily_pnl || profit;
+                        const marginBalance = accountInfo.margin_balance || margin;
+                        const riskRatio = accountInfo.risk_ratio || marginLevel;
                         
                         // 存储账户数据
                         accountsData.push({
@@ -3221,7 +3341,16 @@
                             connected: account.connected,
                             balance: balance,
                             equity: equity,
-                            margin: margin
+                            margin: margin,
+                            uid: uid,
+                            total_assets: totalAssets,
+                            available_assets: availableAssets,
+                            net_assets: netAssets,
+                            frozen_assets: frozenAssets,
+                            daily_pnl: dailyPnl,
+                            margin_balance: marginBalance,
+                            risk_ratio: riskRatio,
+                            total_position: totalPosition
                         });
 
                         const div = document.createElement('div');
@@ -3232,31 +3361,40 @@
                                 <span class="status-badge ${account.connected ? 'connected' : 'disconnected'}">
                                     ${account.connected ? '已连接' : '未连接'}
                                 </span>
+                                ${uid ? `<span style="margin-left: 10px; font-size: 0.75em; color: #00d4ff;">UID: ${uid}</span>` : ''}
                             </div>
                             <div class="account-info-grid">
                                 <div class="info-item">
-                                    <span class="info-label">余额</span>
-                                    <span class="info-value">${balance.toFixed(2)}</span>
+                                    <span class="info-label">账户总资产</span>
+                                    <span class="info-value">${totalAssets.toFixed(2)}</span>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">净值</span>
-                                    <span class="info-value">${equity.toFixed(2)}</span>
+                                    <span class="info-label">可用总资产</span>
+                                    <span class="info-value">${availableAssets.toFixed(2)}</span>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">保证金</span>
-                                    <span class="info-value">${margin.toFixed(2)}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">保证金水平</span>
-                                    <span class="info-value ${parseFloat(marginLevel) < 200 ? 'warning' : ''}">${marginLevel}%</span>
+                                    <span class="info-label">净资产</span>
+                                    <span class="info-value">${netAssets.toFixed(2)}</span>
                                 </div>
                                 <div class="info-item">
                                     <span class="info-label">总持仓</span>
                                     <span class="info-value">${totalPosition.toFixed(2)}</span>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">盈亏</span>
-                                    <span class="info-value ${profit >= 0 ? 'profit' : 'loss'}">${profit >= 0 ? '+' : ''}${profit.toFixed(2)}</span>
+                                    <span class="info-label">冻结资产</span>
+                                    <span class="info-value">${frozenAssets.toFixed(2)}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">当日盈亏</span>
+                                    <span class="info-value ${dailyPnl >= 0 ? 'profit' : 'loss'}">${dailyPnl >= 0 ? '+' : ''}${dailyPnl.toFixed(2)}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">保证金余额</span>
+                                    <span class="info-value">${marginBalance.toFixed(2)}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">风险率</span>
+                                    <span class="info-value ${parseFloat(riskRatio) < 200 ? 'warning' : ''}">${riskRatio}%</span>
                                 </div>
                                 ${account.platform === 'binance' ? `
                                 <div class="info-item">
@@ -3558,6 +3696,32 @@
 
             initSocket();
             updateMoveButtons();
+            
+            // 为点差数据模态框的日期输入框添加事件监听器
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            
+            if (startDateInput) {
+                startDateInput.addEventListener('change', () => {
+                    filterSpreadData('custom');
+                });
+            }
+            
+            if (endDateInput) {
+                endDateInput.addEventListener('change', () => {
+                    filterSpreadData('custom');
+                });
+            }
+            
+            // 为点差数据模态框添加点击背景关闭功能
+            const spreadDataModal = document.getElementById('spreadDataModal');
+            if (spreadDataModal) {
+                spreadDataModal.addEventListener('click', (e) => {
+                    if (e.target === spreadDataModal) {
+                        hideSpreadDataModal();
+                    }
+                });
+            }
         });
 
         function loadSavedSettings() {
@@ -5004,6 +5168,446 @@
             sections.forEach(section => {
                 section.classList.remove('collapsed');
             });
+        }
+
+        let spreadDataModalChart = null;
+
+        function showSpreadDataModal() {
+            const modal = document.getElementById('spreadDataModal');
+            modal.classList.add('show');
+            
+            // 初始化日期时间选择器
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30); // 默认显示最近30天
+            
+            // 格式化为datetime-local需要的格式：YYYY-MM-DDTHH:mm
+            const formatDateForInput = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+            
+            document.getElementById('startDate').value = formatDateForInput(startDate);
+            document.getElementById('endDate').value = formatDateForInput(endDate);
+            
+            // 加载点差数据
+            loadSpreadData();
+        }
+
+        function hideSpreadDataModal() {
+            const modal = document.getElementById('spreadDataModal');
+            modal.classList.remove('show');
+        }
+
+        function refreshSpreadData() {
+            console.log('刷新点差数据');
+            // 重新加载点差数据，使用当前选择的过滤类型
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showAlertToast('请选择时间范围', 'error');
+                return;
+            }
+            
+            // 默认使用custom过滤类型
+            loadSpreadData(startDate, endDate, 'custom');
+            showAlertToast('数据已刷新', 'success');
+        }
+
+        function filterSpreadData(filterType) {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showAlertToast('请选择时间范围', 'error');
+                return;
+            }
+            
+            // 如果没有提供filterType，默认使用'custom'
+            if (!filterType) {
+                filterType = 'custom';
+            }
+            
+            console.log('过滤点差数据:', { startDate, endDate, filterType });
+            loadSpreadData(startDate, endDate, filterType);
+        }
+
+        function loadSpreadData(startDate, endDate, filterType) {
+            // 如果没有提供参数，使用默认值
+            if (!startDate) {
+                startDate = document.getElementById('startDate').value;
+            }
+            if (!endDate) {
+                endDate = document.getElementById('endDate').value;
+            }
+            
+            console.log('加载点差数据:', { startDate, endDate, filterType });
+            
+            // 从数据库加载点差数据
+            let queryParams = '';
+            if (startDate && endDate) {
+                queryParams = `?start_time=${encodeURIComponent(startDate)}&end_time=${encodeURIComponent(endDate)}`;
+            }
+            
+            fetch(`/api/spread/load${queryParams}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('从数据库加载的点差数据:', data.data);
+                        console.log('数据量:', data.data.length);
+                        
+                        let filteredData = data.data;
+                        
+                        // 根据过滤类型进一步处理
+                        if (filterType === 'week') {
+                            // 按周分组
+                            filteredData = groupByWeek(filteredData);
+                            console.log('按周分组后数据量:', filteredData.length);
+                        } else if (filterType === 'day') {
+                            // 按天分组
+                            filteredData = groupByDay(filteredData);
+                            console.log('按天分组后数据量:', filteredData.length);
+                        }
+                        
+                        // 更新UI
+                        updateSpreadDataUI(filteredData);
+                    } else {
+                        console.error('加载点差数据失败:', data.message);
+                        showAlertToast('加载数据失败: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('加载点差数据出错:', error);
+                    showAlertToast('加载数据出错: ' + error.message, 'error');
+                });
+        }
+
+        function groupByWeek(data) {
+            const weeks = {};
+            
+            data.forEach(item => {
+                const date = new Date(item.time);
+                const weekStart = new Date(date);
+                weekStart.setDate(date.getDate() - date.getDay()); // 周日作为一周的开始
+                const weekKey = weekStart.toISOString().split('T')[0];
+                
+                if (!weeks[weekKey]) {
+                    weeks[weekKey] = {
+                        time: weekKey,
+                        positive: [],
+                        negative: []
+                    };
+                }
+                
+                weeks[weekKey].positive.push(item.positive);
+                weeks[weekKey].negative.push(item.negative);
+            });
+            
+            // 计算每周的平均值
+            return Object.values(weeks).map(week => ({
+                time: week.time,
+                positive: week.positive.reduce((a, b) => a + b, 0) / week.positive.length || 0,
+                negative: week.negative.reduce((a, b) => a + b, 0) / week.negative.length || 0
+            }));
+        }
+
+        function groupByDay(data) {
+            const days = {};
+            
+            data.forEach(item => {
+                const date = new Date(item.time);
+                const dayKey = date.toISOString().split('T')[0];
+                
+                if (!days[dayKey]) {
+                    days[dayKey] = {
+                        time: dayKey,
+                        positive: [],
+                        negative: []
+                    };
+                }
+                
+                days[dayKey].positive.push(item.positive);
+                days[dayKey].negative.push(item.negative);
+            });
+            
+            // 计算每天的平均值
+            return Object.values(days).map(day => ({
+                time: day.time,
+                positive: day.positive.reduce((a, b) => a + b, 0) / day.positive.length || 0,
+                negative: day.negative.reduce((a, b) => a + b, 0) / day.negative.length || 0
+            }));
+        }
+
+        function updateSpreadDataUI(data) {
+            // 更新数据统计
+            updateSpreadStatistics(data);
+            
+            // 更新数据表格
+            updateSpreadDataTable(data);
+            
+            // 更新图表
+            updateSpreadDataChart(data);
+        }
+
+        function updateSpreadStatistics(data) {
+            if (data.length === 0) {
+                document.getElementById('totalRecords').textContent = '0';
+                document.getElementById('avgSpread').textContent = '0';
+                document.getElementById('maxSpread').textContent = '0';
+                document.getElementById('minSpread').textContent = '0';
+                return;
+            }
+            
+            const allSpreads = data.flatMap(item => [item.positive, item.negative].filter(v => v !== null && v !== undefined));
+            
+            const totalRecords = data.length;
+            const avgSpread = allSpreads.reduce((a, b) => a + b, 0) / allSpreads.length;
+            const maxSpread = Math.max(...allSpreads);
+            const minSpread = Math.min(...allSpreads);
+            
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('avgSpread').textContent = avgSpread.toFixed(2);
+            document.getElementById('maxSpread').textContent = maxSpread.toFixed(2);
+            document.getElementById('minSpread').textContent = minSpread.toFixed(2);
+        }
+
+        function updateSpreadDataTable(data) {
+            const tableBody = document.getElementById('spreadDataTable');
+            
+            console.log('更新数据表格，数据量:', data.length);
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="padding: 20px; text-align: center; color: rgba(255, 255, 255, 0.4);">暂无数据</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // 按时间倒序排列
+            const sortedData = [...data].reverse();
+            
+            console.log('排序后数据:', sortedData);
+            
+            tableBody.innerHTML = sortedData.map(item => {
+                const timeStr = new Date(item.time).toLocaleString();
+                const negativeStr = item.negative !== null && item.negative !== undefined ? item.negative.toFixed(2) : '--';
+                const positiveStr = item.positive !== null && item.positive !== undefined ? item.positive.toFixed(2) : '--';
+                
+                return `
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <td style="padding: 10px; color: rgba(255, 255, 255, 0.9);">${timeStr}</td>
+                    <td style="padding: 10px; text-align: right; color: ${item.negative < 0 ? '#ff4444' : '#00ccff'};">${negativeStr}</td>
+                    <td style="padding: 10px; text-align: right; color: ${item.positive > 0 ? '#00ccff' : '#ff4444'};">${positiveStr}</td>
+                </tr>
+            `}).join('');
+        }
+
+        function updateSpreadDataChart(data) {
+            const ctx = document.getElementById('spreadChart');
+            
+            console.log('更新线形图，数据量:', data.length);
+            console.log('图表数据详情:', data);
+            
+            if (!ctx) {
+                console.error('找不到spreadChart元素');
+                return;
+            }
+            
+            const ctx2d = ctx.getContext('2d');
+            
+            // 销毁现有图表
+            if (spreadDataModalChart) {
+                spreadDataModalChart.destroy();
+                spreadDataModalChart = null;
+            }
+            
+            // 如果没有数据，显示提示信息
+            if (data.length === 0) {
+                console.log('没有数据，创建空图表');
+                spreadDataModalChart = new Chart(ctx2d, {
+                    type: 'line',
+                    data: {
+                        labels: ['暂无数据'],
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: '请选择有效的时间范围',
+                                color: 'rgba(255, 255, 255, 0.6)'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: false
+                            },
+                            y: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            // 按时间正序排列
+            const sortedData = [...data].sort((a, b) => new Date(a.time) - new Date(b.time));
+            
+            console.log('排序后数据:', sortedData);
+            
+            // 生成标签
+            const labels = sortedData.map(item => {
+                const date = new Date(item.time);
+                return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+            });
+            
+            const positiveData = sortedData.map(item => item.positive);
+            const negativeData = sortedData.map(item => item.negative);
+            
+            console.log('图表数据:', { labels, positiveData, negativeData });
+            
+            spreadDataModalChart = new Chart(ctx2d, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Binance点差',
+                            data: positiveData,
+                            borderColor: '#00ccff',
+                            backgroundColor: 'rgba(0, 204, 255, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Bybit点差',
+                            data: negativeData,
+                            borderColor: '#ff4444',
+                            backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (value !== null && value !== undefined) {
+                                        return `${label}: ${value.toFixed(2)}`;
+                                    }
+                                    return `${label}: --`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                maxRotation: 45,
+                                minRotation: 45,
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                callback: function(value) {
+                                    return value.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+            
+            console.log('线形图创建完成');
+        }
+
+        function exportSpreadData() {
+            const tableBody = document.getElementById('spreadDataTable');
+            const rows = tableBody.querySelectorAll('tr');
+            
+            if (rows.length === 0 || rows[0].querySelector('td[colspan="3"]')) {
+                showAlertToast('没有数据可导出', 'error');
+                return;
+            }
+            
+            let csv = '时间,Bybit点差,Binance点差\n';
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 3) {
+                    csv += `${cells[0].textContent},${cells[1].textContent},${cells[2].textContent}\n`;
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `spread_data_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlertToast('数据导出成功', 'success');
         }
 
         async function loadHistoryData() {
