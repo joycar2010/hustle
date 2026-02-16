@@ -52,7 +52,7 @@
   "alert_settings": {
     "binanceEquityAlert": 0,
     "bybitEquityAlert": 0,
-    "totalAssetAlert": 0,
+    "totalAssetAlert": 100,
     "binanceLiquidationAlert": 0,
     "bybitLiquidationAlert": 0,
     "reverseOpenPriceAlert": 0,

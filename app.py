@@ -229,7 +229,9 @@ def connect_binance():
             api_key=BINANCE_CONFIG['api_key'],
             secret_key=BINANCE_CONFIG['secret_key'],
             base_url=BINANCE_CONFIG['base_url'],
-            symbol=BINANCE_CONFIG['symbol']
+            symbol=BINANCE_CONFIG['symbol'],
+            proxies=BINANCE_CONFIG.get('proxies'),
+            timeout=BINANCE_CONFIG.get('timeout', 30)
         )
 
         if binance_gateway.connect():
@@ -670,7 +672,9 @@ def connect_account(account_id):
                     api_key=api_key,
                     secret_key=secret_key,
                     base_url=BINANCE_CONFIG['base_url'],
-                    symbol=BINANCE_CONFIG['symbol']
+                    symbol=BINANCE_CONFIG['symbol'],
+                    proxies=BINANCE_CONFIG.get('proxies'),
+                    timeout=BINANCE_CONFIG.get('timeout', 30)
                 )
                 
                 if binance_gateway.connect():

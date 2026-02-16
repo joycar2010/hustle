@@ -13,11 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 class BinanceGateway:
-    def __init__(self, api_key: str, secret_key: str, base_url: str, symbol: str):
+    def __init__(self, api_key: str, secret_key: str, base_url: str, symbol: str, proxies: dict = None, timeout: int = 30):
         self.api_key = api_key
         self.secret_key = secret_key
         self.base_url = base_url
         self.symbol = symbol
+        self.proxies = proxies or {"http": None, "https": None}
+        self.timeout = timeout
         self.connected = False
         self.last_price = None
         self.last_update_time = None
@@ -50,13 +52,19 @@ class BinanceGateway:
                 params['signature'] = self._generate_signature(params)
 
             if method.upper() == "POST":
-                response = requests.post(url, headers=headers, json=params, timeout=10)
+                response = requests.post(url, headers=headers, json=params, timeout=self.timeout, proxies=self.proxies)
             else:
-                response = requests.get(url, headers=headers, params=params, timeout=10)
+                response = requests.get(url, headers=headers, params=params, timeout=self.timeout, proxies=self.proxies)
             
             response.raise_for_status()
             return response.json()
 
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Request timeout: {e}")
+            return None
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error: {e}")
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
             return None

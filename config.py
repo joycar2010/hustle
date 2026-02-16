@@ -25,4 +25,9 @@ BINANCE_CONFIG = {
     "base_url": "https://fapi.binance.com",
     "symbol": "XAUUSDT",
     "contract_type": "PERPETUAL",
+    "proxies": {
+        "http": None,
+        "https": None
+    },
+    "timeout": 30
 }

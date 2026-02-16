@@ -1238,6 +1238,23 @@
                 margin-bottom: 20px;
             }
         }
+
+        .alert-toast button:hover {
+            color: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        .alert-toast button:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 480px) {
+            .alert-toast {
+                max-width: 320px;
+                right: 10px;
+                bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1924,14 +1941,27 @@
         </div>
     </div>
 
-    <div class="alert-toast" id="alertToast" style="position: fixed; bottom: 20px; right: 20px; background: rgba(26, 26, 46, 0.95); border-radius: 8px; padding: 15px 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border-left: 4px solid #ffd700; z-index: 9999; transform: translateX(100%); transition: transform 0.3s ease-in-out; max-width: 300px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="color: #ffd700; font-size: 1.2em;">⚠️</div>
-            <div style="flex: 1;">
-                <div style="font-weight: 600; margin-bottom: 4px; color: #ffd700;">提醒</div>
-                <div id="alertToastMessage" style="font-size: 0.9em; line-height: 1.4;"></div>
+    <div class="alert-toast" id="alertToast" style="position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateX(100%); transition: transform 0.3s ease-in-out; max-width: 380px; border: 1px solid rgba(255, 255, 255, 0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(255, 255, 255, 0.03);">
+            <div style="font-weight: 600; color: #ffd700; font-size: 0.95em; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">通知中心</div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button onclick="showNotificationList()" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1em; padding: 4px; transition: all 0.2s ease;">≡</button>
+                <button onclick="toggleNotificationSound()" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1.1em; padding: 4px; transition: all 0.2s ease;">🔔</button>
+                <button onclick="hideAlertToast()" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1em; padding: 4px; transition: all 0.2s ease;">✕</button>
             </div>
-            <button onclick="hideAlertToast()" style="background: none; border: none; color: #888; cursor: pointer; font-size: 1.1em; padding: 2px;">×</button>
+        </div>
+        <div style="padding: 15px;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0, 204, 255, 0.2); color: #00ccff; display: flex; align-items: center; justify-content: center; font-size: 1.1em; flex-shrink: 0; border: 1px solid rgba(0, 204, 255, 0.3);">i</div>
+                <div style="flex: 1;">
+                    <div id="alertToastMessage" style="font-size: 0.9em; line-height: 1.4; color: rgba(255, 255, 255, 0.9); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;"></div>
+                    <div style="font-size: 0.75em; color: rgba(255, 255, 255, 0.5); margin-top: 6px;">刚刚</div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                    <button onclick="toggleNotificationRead(this)" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1.1em; padding: 4px; transition: all 0.2s ease;">🔔</button>
+                    <button onclick="moveNotificationUp()" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; font-size: 1em; padding: 4px; transition: all 0.2s ease;">↑</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3717,162 +3747,316 @@
         }
 
         function showAlertToast(message, type = 'info') {
-            try {
-                // 播放提醒音效 - 使用经典手机铃声音效，循环播放3次
-                let playCount = 0;
-                const maxPlays = 3;
-                
-                function playAlertSound() {
-                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3');
-                    audio.volume = 0.5;
-                    audio.play().catch(e => console.log('Audio play failed:', e));
-                    
-                    playCount++;
-                    if (playCount < maxPlays) {
-                        // 1秒后再次播放
-                        setTimeout(playAlertSound, 1000);
+            // 使用requestAnimationFrame来处理DOM更新和动画，确保它们在浏览器的渲染周期中执行
+            requestAnimationFrame(() => {
+                try {
+                    // 异步播放提醒音效，确保它不会阻塞页面加载和渲染
+                    if (notificationSoundEnabled) {
+                        setTimeout(() => {
+                            let playCount = 0;
+                            const maxPlays = 3;
+                            
+                            function playAlertSound() {
+                                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3');
+                                audio.volume = 0.5;
+                                audio.play().catch(e => console.log('Audio play failed:', e));
+                                
+                                playCount++;
+                                if (playCount < maxPlays) {
+                                    // 1秒后再次播放
+                                    setTimeout(playAlertSound, 1000);
+                                }
+                            }
+                            
+                            // 开始播放音效
+                            playAlertSound();
+                        }, 0);
                     }
-                }
-                
-                // 开始播放音效
-                playAlertSound();
 
-                // 显示提醒弹窗
-                // 确保元素存在，如果不存在则创建
-                let toast = document.getElementById('alertToast');
-                let toastMessage;
+                    // 显示提醒弹窗
+                    // 确保元素存在，如果不存在则创建
+                    let toast = document.getElementById('alertToast');
+                    let toastMessage;
 
-                // 如果元素不存在，创建它们
-                if (!toast) {
-                    // 创建提醒弹窗容器
-                    toast = document.createElement('div');
-                    toast.className = 'alert-toast';
-                    toast.id = 'alertToast';
-                    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: rgba(26, 26, 46, 0.95); border-radius: 8px; padding: 15px 20px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); border-left: 4px solid #ffd700; z-index: 9999; transform: translateX(100%); transition: transform 0.3s ease-in-out; max-width: 300px;';
-                    
-                    // 创建弹窗内容
-                    const toastContent = document.createElement('div');
-                    toastContent.style.display = 'flex';
-                    toastContent.style.alignItems = 'center';
-                    toastContent.style.gap = '12px';
-                    
-                    // 创建图标元素
-                    const iconElement = document.createElement('div');
-                    iconElement.style.color = '#ffd700';
-                    iconElement.style.fontSize = '1.2em';
-                    iconElement.textContent = '⚠️';
-                    toastContent.appendChild(iconElement);
-                    
-                    // 创建消息容器
-                    const messageContainer = document.createElement('div');
-                    messageContainer.style.flex = '1';
-                    
-                    // 创建标题
-                    const titleElement = document.createElement('div');
-                    titleElement.style.fontWeight = '600';
-                    titleElement.style.marginBottom = '4px';
-                    titleElement.style.color = '#ffd700';
-                    titleElement.textContent = '提醒';
-                    messageContainer.appendChild(titleElement);
-                    
-                    // 创建消息元素
-                    toastMessage = document.createElement('div');
-                    toastMessage.id = 'alertToastMessage';
-                    toastMessage.style.fontSize = '0.9em';
-                    toastMessage.style.lineHeight = '1.4';
-                    messageContainer.appendChild(toastMessage);
-                    
-                    toastContent.appendChild(messageContainer);
-                    
-                    // 创建关闭按钮
-                    const closeButton = document.createElement('button');
-                    closeButton.onclick = hideAlertToast;
-                    closeButton.style.background = 'none';
-                    closeButton.style.border = 'none';
-                    closeButton.style.color = '#888';
-                    closeButton.style.cursor = 'pointer';
-                    closeButton.style.fontSize = '1.1em';
-                    closeButton.style.padding = '2px';
-                    closeButton.textContent = '×';
-                    toastContent.appendChild(closeButton);
-                    
-                    // 添加内容到弹窗
-                    toast.appendChild(toastContent);
-                    
-                    // 添加到body
-                    document.body.appendChild(toast);
-                } else {
-                    // 如果元素已存在，直接获取消息元素
-                    toastMessage = toast.querySelector('#alertToastMessage');
-                    if (!toastMessage) {
-                        // 如果消息元素不存在，创建它
+                    // 如果元素不存在，创建它们
+                    if (!toast) {
+                        // 创建提醒弹窗容器
+                        toast = document.createElement('div');
+                        toast.className = 'alert-toast';
+                        toast.id = 'alertToast';
+                        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); z-index: 9999; transform: translateX(100%); transition: transform 0.3s ease-in-out; max-width: 380px; border: 1px solid rgba(255, 255, 255, 0.05);';
+                        
+                        // 创建弹窗头部
+                        const header = document.createElement('div');
+                        header.style.display = 'flex';
+                        header.style.justifyContent = 'space-between';
+                        header.style.alignItems = 'center';
+                        header.style.padding = '12px 16px';
+                        header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+                        header.style.background = 'rgba(255, 255, 255, 0.03)';
+                        
+                        const title = document.createElement('div');
+                        title.style.fontWeight = '600';
+                        title.style.color = '#ffd700';
+                        title.style.fontSize = '0.95em';
+                        title.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        title.textContent = '通知中心';
+                        header.appendChild(title);
+                        
+                        const actions = document.createElement('div');
+                        actions.style.display = 'flex';
+                        actions.style.gap = '12px';
+                        actions.style.alignItems = 'center';
+                        
+                        const listBtn = document.createElement('button');
+                        listBtn.onclick = showNotificationList;
+                        listBtn.style.background = 'none';
+                        listBtn.style.border = 'none';
+                        listBtn.style.color = 'rgba(255, 255, 255, 0.6)';
+                        listBtn.style.cursor = 'pointer';
+                        listBtn.style.fontSize = '1em';
+                        listBtn.style.padding = '4px';
+                        listBtn.style.transition = 'all 0.2s ease';
+                        listBtn.textContent = '≡';
+                        actions.appendChild(listBtn);
+                        
+                        const soundBtn = document.createElement('button');
+                        soundBtn.onclick = toggleNotificationSound;
+                        soundBtn.style.background = 'none';
+                        soundBtn.style.border = 'none';
+                        soundBtn.style.color = 'rgba(255, 255, 255, 0.6)';
+                        soundBtn.style.cursor = 'pointer';
+                        soundBtn.style.fontSize = '1.1em';
+                        soundBtn.style.padding = '4px';
+                        soundBtn.style.transition = 'all 0.2s ease';
+                        soundBtn.textContent = '🔔';
+                        actions.appendChild(soundBtn);
+                        
+                        const closeBtn = document.createElement('button');
+                        closeBtn.onclick = hideAlertToast;
+                        closeBtn.style.background = 'none';
+                        closeBtn.style.border = 'none';
+                        closeBtn.style.color = 'rgba(255, 255, 255, 0.6)';
+                        closeBtn.style.cursor = 'pointer';
+                        closeBtn.style.fontSize = '1em';
+                        closeBtn.style.padding = '4px';
+                        closeBtn.style.transition = 'all 0.2s ease';
+                        closeBtn.textContent = '✕';
+                        actions.appendChild(closeBtn);
+                        
+                        header.appendChild(actions);
+                        toast.appendChild(header);
+                        
+                        // 创建弹窗内容
+                        const content = document.createElement('div');
+                        content.style.padding = '15px';
+                        
+                        const contentWrapper = document.createElement('div');
+                        contentWrapper.style.display = 'flex';
+                        contentWrapper.style.alignItems = 'flex-start';
+                        contentWrapper.style.gap = '12px';
+                        
+                        const iconElement = document.createElement('div');
+                        iconElement.style.width = '32px';
+                        iconElement.style.height = '32px';
+                        iconElement.style.borderRadius = '50%';
+                        iconElement.style.background = 'rgba(0, 204, 255, 0.2)';
+                        iconElement.style.color = '#00ccff';
+                        iconElement.style.display = 'flex';
+                        iconElement.style.alignItems = 'center';
+                        iconElement.style.justifyContent = 'center';
+                        iconElement.style.fontSize = '1.1em';
+                        iconElement.style.flexShrink = '0';
+                        iconElement.style.border = '1px solid rgba(0, 204, 255, 0.3)';
+                        iconElement.textContent = 'i';
+                        contentWrapper.appendChild(iconElement);
+                        
+                        const messageContainer = document.createElement('div');
+                        messageContainer.style.flex = '1';
+                        
                         toastMessage = document.createElement('div');
                         toastMessage.id = 'alertToastMessage';
                         toastMessage.style.fontSize = '0.9em';
                         toastMessage.style.lineHeight = '1.4';
+                        toastMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                        toastMessage.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                        messageContainer.appendChild(toastMessage);
                         
-                        // 找到消息容器并添加消息元素
-                        const messageContainer = toast.querySelector('div > div:nth-child(2)');
-                        if (messageContainer) {
-                            // 清除现有内容，保留标题
-                            const titleElement = messageContainer.querySelector('div:first-child');
-                            messageContainer.innerHTML = '';
-                            if (titleElement) {
-                                messageContainer.appendChild(titleElement);
+                        const timeElement = document.createElement('div');
+                        timeElement.style.fontSize = '0.75em';
+                        timeElement.style.color = 'rgba(255, 255, 255, 0.5)';
+                        timeElement.style.marginTop = '6px';
+                        timeElement.textContent = '刚刚';
+                        messageContainer.appendChild(timeElement);
+                        
+                        contentWrapper.appendChild(messageContainer);
+                        
+                        const rightActions = document.createElement('div');
+                        rightActions.style.display = 'flex';
+                        rightActions.style.flexDirection = 'column';
+                        rightActions.style.gap = '8px';
+                        rightActions.style.alignItems = 'flex-end';
+                        
+                        const readBtn = document.createElement('button');
+                        readBtn.onclick = function() { toggleNotificationRead(this); };
+                        readBtn.style.background = 'none';
+                        readBtn.style.border = 'none';
+                        readBtn.style.color = 'rgba(255, 255, 255, 0.6)';
+                        readBtn.style.cursor = 'pointer';
+                        readBtn.style.fontSize = '1.1em';
+                        readBtn.style.padding = '4px';
+                        readBtn.style.transition = 'all 0.2s ease';
+                        readBtn.textContent = '🔔';
+                        rightActions.appendChild(readBtn);
+                        
+                        const upBtn = document.createElement('button');
+                        upBtn.onclick = moveNotificationUp;
+                        upBtn.style.background = 'none';
+                        upBtn.style.border = 'none';
+                        upBtn.style.color = 'rgba(255, 255, 255, 0.6)';
+                        upBtn.style.cursor = 'pointer';
+                        upBtn.style.fontSize = '1em';
+                        upBtn.style.padding = '4px';
+                        upBtn.style.transition = 'all 0.2s ease';
+                        upBtn.textContent = '↑';
+                        rightActions.appendChild(upBtn);
+                        
+                        contentWrapper.appendChild(rightActions);
+                        content.appendChild(contentWrapper);
+                        toast.appendChild(content);
+                        
+                        // 添加到body
+                        document.body.appendChild(toast);
+                    } else {
+                        // 如果元素已存在，直接获取消息元素
+                        toastMessage = toast.querySelector('#alertToastMessage');
+                        if (!toastMessage) {
+                            // 如果消息元素不存在，创建它
+                            toastMessage = document.createElement('div');
+                            toastMessage.id = 'alertToastMessage';
+                            toastMessage.style.fontSize = '0.9em';
+                            toastMessage.style.lineHeight = '1.4';
+                            toastMessage.style.color = 'rgba(255, 255, 255, 0.9)';
+                            toastMessage.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                            
+                            // 找到消息容器并添加消息元素
+                            const messageContainer = toast.querySelector('div > div:nth-child(2)');
+                            if (messageContainer) {
+                                messageContainer.appendChild(toastMessage);
                             }
-                            messageContainer.appendChild(toastMessage);
                         }
                     }
-                }
 
-                // 确保toastMessage存在
-                if (!toastMessage) {
-                    // 如果仍然找不到，创建一个简单的文本节点
-                    toastMessage = document.createTextNode(message);
-                    toast.appendChild(toastMessage);
-                } else {
-                    // 设置消息内容
-                    toastMessage.textContent = message;
-                }
-
-                // 根据类型设置不同的边框颜色
-                if (type === 'error') {
-                    toast.style.borderLeftColor = '#ff4444';
-                    const iconElement = toast.querySelector('div > div:first-child');
-                    if (iconElement) {
-                        iconElement.textContent = '❌';
+                    // 确保toastMessage存在
+                    if (!toastMessage) {
+                        // 如果仍然找不到，创建一个简单的文本节点
+                        toastMessage = document.createTextNode(message);
+                        toast.appendChild(toastMessage);
+                    } else {
+                        // 设置消息内容
+                        toastMessage.textContent = message;
                     }
-                } else if (type === 'success') {
-                    toast.style.borderLeftColor = '#00ff88';
-                    const iconElement = toast.querySelector('div > div:first-child');
-                    if (iconElement) {
-                        iconElement.textContent = '✅';
+
+                    // 根据类型设置不同的图标背景色
+                    if (type === 'error') {
+                        const iconElement = toast.querySelector('div > div > div:first-child');
+                        if (iconElement) {
+                            iconElement.style.background = 'rgba(250, 82, 82, 0.2)';
+                            iconElement.style.color = '#fa5252';
+                            iconElement.style.border = '1px solid rgba(250, 82, 82, 0.3)';
+                            iconElement.textContent = '!';
+                        }
+                    } else if (type === 'success') {
+                        const iconElement = toast.querySelector('div > div > div:first-child');
+                        if (iconElement) {
+                            iconElement.style.background = 'rgba(64, 192, 87, 0.2)';
+                            iconElement.style.color = '#40c057';
+                            iconElement.style.border = '1px solid rgba(64, 192, 87, 0.3)';
+                            iconElement.textContent = '✓';
+                        }
+                    } else {
+                        const iconElement = toast.querySelector('div > div > div:first-child');
+                        if (iconElement) {
+                            iconElement.style.background = 'rgba(0, 204, 255, 0.2)';
+                            iconElement.style.color = '#00ccff';
+                            iconElement.style.border = '1px solid rgba(0, 204, 255, 0.3)';
+                            iconElement.textContent = 'i';
+                        }
                     }
-                } else {
-                    toast.style.borderLeftColor = '#ffd700';
-                    const iconElement = toast.querySelector('div > div:first-child');
-                    if (iconElement) {
-                        iconElement.textContent = '⚠️';
-                    }
+
+                    // 显示弹窗
+                    toast.style.transform = 'translateX(0)';
+
+                    // 添加淡入动画
+                    toast.style.opacity = '0';
+                    requestAnimationFrame(() => {
+                        toast.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
+                        toast.style.opacity = '1';
+                    });
+
+                    // 5秒后自动隐藏
+                    setTimeout(() => {
+                        hideAlertToast();
+                    }, 5000);
+                } catch (error) {
+                    console.error('Failed to show alert toast:', error);
                 }
-
-                toast.style.transform = 'translateX(0)';
-
-                // 3秒后自动隐藏
-                setTimeout(() => {
-                    hideAlertToast();
-                }, 3000);
-            } catch (error) {
-                console.error('Failed to show alert toast:', error);
-            }
+            });
         }
 
         function hideAlertToast() {
-            const toast = document.getElementById('alertToast');
-            if (toast) {
-                toast.style.transform = 'translateX(100%)';
-            }
+            // 使用requestAnimationFrame来处理DOM更新和动画，确保它们在浏览器的渲染周期中执行
+            requestAnimationFrame(() => {
+                const toast = document.getElementById('alertToast');
+                if (toast) {
+                    // 添加淡出动画
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    
+                    // 动画结束后清理
+                    setTimeout(() => {
+                        toast.style.opacity = '1'; // 重置透明度，以便下次显示
+                    }, 300);
+                }
+            });
         }
+
+        function showNotificationList() {
+            // 显示通知列表的功能
+            showAlertToast('通知列表功能开发中', 'info');
+        }
+
+        function toggleNotificationSound() {
+            // 切换通知声音的功能
+            showAlertToast('通知声音已' + (notificationSoundEnabled ? '关闭' : '开启'), 'info');
+            notificationSoundEnabled = !notificationSoundEnabled;
+            localStorage.setItem('notificationSoundEnabled', notificationSoundEnabled);
+        }
+
+        function toggleNotificationRead(button) {
+            // 使用requestAnimationFrame来处理DOM更新
+            requestAnimationFrame(() => {
+                // 标记通知为已读的功能
+                button.textContent = button.textContent === '🔔' ? '🔕' : '🔔';
+                showAlertToast('通知已标记为' + (button.textContent === '🔕' ? '已读' : '未读'), 'info');
+            });
+        }
+
+        function moveNotificationUp() {
+            // 使用requestAnimationFrame来处理DOM更新
+            requestAnimationFrame(() => {
+                // 移动通知位置的功能
+                const toast = document.getElementById('alertToast');
+                if (toast) {
+                    const currentBottom = parseInt(toast.style.bottom) || 20;
+                    toast.style.bottom = (currentBottom + 10) + 'px';
+                    showAlertToast('通知位置已调整', 'info');
+                }
+            });
+        }
+
+        // 初始化通知声音设置
+        let notificationSoundEnabled = localStorage.getItem('notificationSoundEnabled') !== 'false';
 
         function testAlertFunctionality() {
             // 显示测试提醒
